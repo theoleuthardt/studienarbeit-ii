@@ -1,0 +1,18 @@
+\chapter{Quellen}\label{ch:quellen}
+Diese Vorlage zitiert im APA7 Style. Dabei werden Quellen im Text wiefolgt angegeben:\\
+(Nachname, Erscheinungsjahr)
+
+Quellen werden mit \verb|\cite{}| eingefügt. In der Datei \verb|literatur.bib| werden die Quellen initialisiert, zu den gängigen Arten sind Beispiele (aus meinem letzten PTB) gegeben.
+
+Um Seitenzahlen anzugeben (bspw. bei Buchquellen) kann \verb|\cite[S. XX - XX]{}| verwendet werden:
+\begin{table}[H]
+    \begin{tabular}{ll}
+         Ohne Seitenzahl & \cite{Eve19} \\
+         Mit Seitenzahl & \cite[S. 19ff]{Eve19} % p. bei englischem Bericht
+    \end{tabular}
+    \label{table:cite}
+\end{table}
+
+Bei direkten Zitaten benutze ich super gerne Fußnoten! Das ist wirklich gar nicht vorgegeben, aber so wisst ihr, wie's geht. Falls ihr euch schonmal gefragt habt, was eigentlich die FUB-IT ist:
+
+Die Zentraleinrichtung FUB-IT unterstützt die Forschung, Lehre und Verwaltung der FU Berlin, indem sie „leistungsstarke \acrshort{IT}-Dienste, hochverfügbare Rechenressourcen, innovative Technologien und erstklassigen technischen Support bereitstellt“\footnote[1]{\cite{Fub24}}. Mit ihrer Gründung im April 2023 wurden die \acrshort{IT}-Bereiche der Universität vereint, um universitätsübergreifend die passende \acrshort{IT} serviceorientiert anzubieten \cite{Fub24}.

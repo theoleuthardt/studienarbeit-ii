@@ -1,0 +1,305 @@
+\chapter{Algorithmen}\label{algorithmen}
+Da nun die grobe Struktur für die Systemarchitektur, das Frontend und Backend in Kapitel \ref{entwurf} beleuchtet wurde, werden anschließend alle Grundfunktionalitäten des Codes in Go genauer erklärt mit konkreten Codeausschnitten.
+Zuallererst werden in Abschnitt \ref{abwägung-go-packages} die Abwägungen zwischen den zu verwendenden Go-Paketen beleuchtet.
+Für die globale Codestruktur wird die Main-Funktion der Anwendung erklärt in Abschnitt \ref{kommunikation-frontend-backend}.
+Folgend werden die automatische Verbindung von zwei Backendinstanzen und das automatische Senden und Empfangen der Pakete per TCP zwischen einander in Abschnitt \ref{auto-tcp-verbindung} und \ref{auto-tcp-pakete-senden} dargelegt.
+Wie das Leser-Schreiber-Problem gelöst wird im Code durch Synchronisation, wird veranschaulicht in Abschnitt \ref{leser-schreiber-sync}.
+Darauf folgend wird das Kommunikationskonzept zwischen Frontend und Backend in Abschnitt \ref{kommunikation-frontend-backend} näher betrachtet.
+Abschließend wird die zugehörige Datenvisualisierung im Frontend in Abschnitt \ref{datenvisualisierung} festgehalten.
+Wegen des begrenzten Rahmens dieser Arbeit werden nicht alle Funktionen des Quellcodes erläutert, sondern ggf. nur erwähnt.
+
+\section{Abwägung zwischen Go-Paketen}\label{abwägung-go-packages}
+Für die Implementation wird geplant die Funktionen eines TCP-Servers zu implementieren und dabei stehen die Go-Pakete \texttt{net} und \texttt{tcp} zur Auswahl nach aktuellem Stand.
+Das Paket \texttt{net} bietet die Funktionen \texttt{DialTimeout}, \texttt{Listen}, \texttt{Accept}, \texttt{Close}, \texttt{Read}, um einerseits eine direkte TCP-Verbindung in diesem Fall mit einem Peer aufzubauen und andererseits wird auf dem ausführenden Hostsystem ein TCP-Server gestartet, der auf Verbindungsanfragen reagieren kann und Daten des Pakets auslesen kann. \cite{go-net-package}
+So werden Hauptkomponenten des Backends für TCP in mehreren Funktionen eines Go-Paketes bereitgestellt und erfordern geringen Aufwand zur Implementation.
+Als Alternative wird das Paket \texttt{tcp} zwar in Betracht gezogen und darin werden ebenfalls gleichnamige Funktionen bereitgestellt nach der offiziellen Paketdokumentation mit den gleichen Funktionalitäten. \cite{go-tcp-package}
+Jedoch unter Betrachtung der Versionen der beiden Pakete, der aktuellen Importzahlen in entwickelten Go-Projekten seit den Releases der Packages und des Umfangs der Dokumentationen inklusive der vorhandenen Community für Hilfebereitstellung wird festgestellt, dass das \texttt{net}-Package eine bessere Option darstellt und somit für die Implementation genutzt wird.\\
+\\
+Bei der Auswahl des Frontend-Frameworks werden zwei Go-Pakete \texttt{gioui} und \texttt{fyne} in Betracht gezogen.
+Beide bieten eine container-basierte Layout-Strategie und Widgets bzw. Components für die Implementation von zum Beispiel Buttons oder Labels in der \acrshort{UI}. \cite{go-fyne-package} \cite{go-gioui-layout-package} \cite{go-gioui-component-package}
+In den ersten Prototypen der Anwendung wird mit \texttt{gioui} gearbeitet, um die Grundstruktur des Frontends zu entwerfen.
+Weil aber ein Wachstum der Codestrukturen bei geringer Anzahl von \acrshort{UI}-Elementen beobachtet wird mit hoher Komplexität des Quellcodes und häufig auftretenden Fehlern ohne auffindbare Lösungen, wird das beliebtere Frontend-Framework und Go-Paket \texttt{fyne} getestet.
+Durch die verminderte Menge an Quellcode für die Implementation einer vergleichsweise einfachen Desktopanwendung im Gegensatz zu großen Fullstack-Anwendungen in Unternehmen und die Verfügbarkeit von allen notwendigen \acrshort{UI}-Komponenten im Go-Paket \texttt{fyne}, wird dieses stattdessen verwendet für die Entwicklung des Frontends der Desktopanwendung.
+
+\section{Kommunikation zwischen Frontend \& Backend}\label{kommunikation-frontend-backend}
+In der Main-Funktion der main.go-Datei wie im Codeausschnitt \ref{code:main.go} zu sehen, die die im Mittelpunkt stehende Go-Datei darstellt und beim Kompilieren in Maschinencode umgewandelt wird, wird der Message-Channel global erstellt, das Backend im Hintergrund und das Frontend im Vordergrund gestartet.
+Mit dem Befehl \texttt{make} in Zeile 7 von Codeausschnitt \ref{code:main.go} wird ein Channel erstellt, der Daten vom Typ \texttt{String} transportieren kann, was zum Transport von JSON-Objekten genutzt wird. \cite{go-docs}
+Jeweils das Frontend und Backend werden in separaten Go-Dateien entwickelt und durch den Befehl \texttt{import} in der main.go-Datei importiert, womit die exportierten Funktionen aus den importieren Dateien genutzt werden können. \cite{go-docs}
+Mithilfe des Schlüsselwortes \texttt{go} kann eine nebenläufige (siehe \gls{glos:nebenläufigkeit}) sogenannte Go-Routine in einem seperaten Thread gestartet werden, wodurch das Backend abgetrennt vom Frontend im Hintergrund gestartet werden kann.
+Das Frontend der Desktopanwendung wird im aktuellen Thread ausgeführt, wodurch die Initialisierung des Programms vollendet wird. \\
+
+\begin{lstlisting}[style=golang, caption={Main-Funktion in main.go für Nebenläufigkeit von Frontend und Backend}]
+package main
+import (
+	"network-interaction/backend"
+	"network-interaction/frontend"
+)
+func main() {
+	messageChan := make(chan string)
+
+	go backend.SetupServer(messageChan)
+	frontend.SetupGUI(messageChan)
+}
+\end{lstlisting}\label{code:main.go}
+
+\section{Automatische Verbindung der Backend-Instanzen per TCP im lokalen Netzwerk}\label{auto-tcp-verbindung}
+In diesem Abschnitt wird die automatische Verbindung der Backend-Instanzen über TCP im lokalen Netzwerk dargestellt. 
+Ziel ist, dass mehrere Backend-Instanzen ohne manuelles Eingreifen gegenseitig erkannt und verbunden werden.
+Mithilfe der Funktion \texttt{SetupServer} aus Codeausschnitt \ref{code:setupserver} wird das Backend initialisiert. 
+Dabei werden zwei Bestandteile ausgeführt, durch die eine automatische Verbindung mit einer anderen Backend-Instanz ermöglicht wird.
+Zunächst wird mit der Funktion \texttt{utils.FindAvailablePort(50500, 50600)} in Zeile 2 ein freier Port innerhalb des vorgegebenen Bereichs ermittelt. 
+Dadurch kann der parallele Betrieb mehrerer Instanzen im selben Netzwerk ohne Portkonflikte gewährleistet werden. 
+Anschließend wird mit \texttt{go startTCPServer(messageChan)} in einem weiteren parallelen Thread ein TCP-Server gestartet, über den eingehende Verbindungen entgegengenommen werden.
+Innerhalb einer anonymen Funktion ab Zeile 6 wird der Peer-Discovery-Mechanismus ausgeführt. 
+Hierzu wird ein Portbereich (50500–50599) in einem Slice abgelegt, damit systematisch nach anderen Instanzen gesucht werden kann. 
+Über \texttt{utils.DiscoverPeers} wird eine weitere laufende Backend-Instanz ermittelt, indem nacheinander Verbindungsversuche zu allen Ports des Bereichs mit Ausnahme des eigenen durchgeführt werden. 
+Wird ein Peer gefunden, wird dessen Adresse in \texttt{peerAddress} hinterlegt und die Variable \texttt{connected} auf \texttt{true} gesetzt für den visuellen Indikator im Frontend. 
+Ergebnisse der Suche werden in den Logs des Backends dokumentiert.
+\texttt{startTCPServer} wird als Funktion verwendet für das eigentliche Port-Listening (siehe Codeausschnitt \ref{code:portlistening}). 
+Über \texttt{net.Listen("tcp", fmt.Sprintf(":\%d", serverPort))} in Zeile 2 wird ein TCP-Listener erstellt, auf dem eingehende Verbindungen auf dem zuvor ermittelten Port akzeptiert werden. \cite{go-docs}
+Jede neue Verbindung wird in einer eigenen Goroutine (\texttt{go handleConnection}) bzw. in einem weiteren Thread verarbeitet, sodass parallele Kommunikation mit mehreren Peers ohne Blockierung des Servers ermöglicht wird. 
+Tritt beim Akzeptieren eine Störung auf, wird der fehlerhafte Versuch verworfen, damit der Listener verfügbar bleibt.
+Durch die Kombination beider Funktionen entsteht ein selbstorganisierendes System: Für jede Instanz wird ein freier Port bestimmt, auf eingehende Verbindungen wird gelauscht, und gleichzeitig wird aktiv nach weiteren Instanzen gesucht, mit denen anschließend kommuniziert wird. 
+Auf diese Weise wird die Notwendigkeit fester IP-Adressen oder manueller Konfiguration aufgehoben.\\
+\newpage
+
+
+\begin{lstlisting}[style=golang, caption={Funktion zum Aufsetzen des TCP-Servers bei der Initialisierung}]
+func SetupServer(messageChan chan string) {
+	serverPort = utils.FindAvailablePort(50500, 50600)
+	utils.LogInfo(fmt.Sprintf("Starting server on port %d", serverPort))
+	go startTCPServer(messageChan)
+    
+	func() {
+		portRange := make([]int, 0, 100)
+		for port := 50500; port < 50600; port++ {
+			portRange = append(portRange, port)
+		}
+		peerAddress = utils.DiscoverPeers(serverPort, portRange, func() string { return peerAddress })
+		if peerAddress != "" {
+			connected = true
+		}
+		utils.LogInfo("Peer discovery complete, connected to: " + peerAddress)
+	}()
+
+	utils.StartMessageSenders(func() string { return peerAddress })
+	go monitorConnection()
+	sendQueueState(messageChan)
+	go countdownQueues()
+	go sendQueueStatePeriodically(messageChan, 100*time.Millisecond)
+}
+\end{lstlisting}\label{code:setupserver}
+
+\begin{lstlisting}[style=golang, caption={Funktion für Portlistening}]
+func startTCPServer(messageChan chan string) {
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", serverPort))
+	if err != nil {
+		utils.LogError("Failed to start server: " + err.Error())
+		return
+	}
+	defer listener.Close()
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			continue
+		}
+		go handleConnection(conn, messageChan)
+	}
+}
+\end{lstlisting}\label{code:portlistening}
+
+
+\section{Automatisches Senden, Erhalten und Zählen der TCP-Pakete}\label{auto-tcp-pakete-senden}
+In diesem Abschnitt wird der Ablauf des automatischen Sendens, Empfangens und Zählens von TCP-Paketen im lokalen Netzwerk beschrieben. 
+Das Versenden der Nachrichten wird durch die Funktion \texttt{StartMessageSenders} gesteuert aus Codeausschnitt \ref{code:send-fast-package}. 
+Diese Funktion wird beim Start des Backends initialisiert, wobei die Ausführung in einer eigenen Go-Routine  erfolgt. 
+Hierzu wird ein Zufallszahlengenerator verwendet dem Go-Paket \texttt{math/rand}, das mit der aktuellen Systemzeit initialisiert wird. \cite{go-math-rand-package}
+Aus diesem Generator wird in jeder Iteration eine zufällige Abweichung vom Basisintervall von 200 Millisekunden berechnet. 
+Dadurch wird ein leicht variierender Sendeintervall erzeugt, wodurch eine gleichmäßige, aber nicht vollständig deterministische Paketfolge entsteht.
+Vor dem Versenden wird mithilfe der übergebenen Funktion \texttt{getPeerAddress} die aktuelle Adresse des verbundenen Peers abgefragt. 
+Nur wenn eine gültige Adresse vorhanden ist, also die Addresse kein leerer String ist, wird der Sendevorgang eingeleitet. 
+Die eigentliche Übertragung der Nachricht bzw. des TCP-Pakets erfolgt anschließend durch den Aufruf von \texttt{SendMessageToPeer} mit dem Ziel, das sogenannte „Fast-Package“ zu verschicken.\\
+
+\begin{lstlisting}[style=golang, caption={Funktionsteil zum Versenden des Fast-Packages}]
+func StartMessageSenders(getPeerAddress func() string) {
+	go func() {
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		for {
+			baseInterval := 200 * time.Millisecond
+			variation := time.Duration(r.Intn(101)-50) * time.Millisecond
+			time.Sleep(baseInterval + variation)
+
+			if addr := getPeerAddress(); addr != "" {
+				SendMessageToPeer(addr, "fast message")
+			}
+		}
+	}()
+    ...
+}
+\end{lstlisting}\label{code:send-fast-package}
+
+In der Funktion \texttt{SendMessageToPeer} aus Codeausschnitt \ref{code:send-package-to-peer} wird zunächst geprüft, ob die Peer-Adresse ein leerer String ist, da die Funktion sonst damit nicht umgehen könnte und Probleme erzeugt werden würden. 
+Ist dies der Fall, wird der Sendevorgang abgebrochen.
+Andernfalls wird über \texttt{net.DialTimeout} eine TCP-Verbindung zu dem Peer aufgebaut. 
+Für den Verbindungsaufbau wird ein Timeout von einer Sekunde gesetzt, um lange Wartezeiten bei nicht erreichbaren Peers zu vermeiden.
+Im Erfolgsfall wird die Verbindung offen gehalten, bis die Nachricht erfolgreich übertragen wurde. 
+Die Nachricht wird dabei als Byte-Array über \texttt{conn.Write} gesendet. \cite{go-net-package-connection}
+Tritt ein Fehler beim Senden auf, wird dieser protokolliert in den Logs des Backends. 
+Nach Abschluss der Übertragung wird die Verbindung mit \texttt{defer conn.Close()} automatisch geschlossen, weil defer dafür sorgt, dass auf das Keyword folgenden Code ausgeführt wird, sobald die umliegende Funktion abschließend einen Wert zurückgibt. \cite{go-docs} \\
+
+\begin{lstlisting}[style=golang, caption={Funktion zum Versenden des Fast-Packages an Peer}]
+func SendMessageToPeer(peerAddress, message string) {
+	if peerAddress == "" {
+		return
+	}
+	conn, err := net.DialTimeout("tcp", peerAddress, 1*time.Second)
+	if err != nil {
+		LogError("Failed to connect to peer: " + err.Error())
+		return
+	}
+	defer conn.Close()
+	_, err = conn.Write([]byte(message))
+	if err != nil {
+		LogError("Failed to send message to peer: " + err.Error())
+	}
+}
+\end{lstlisting}\label{code:send-package-to-peer}
+
+Der Empfang eingehender Pakete wird durch die Funktion \texttt{handleConnection} in Codeausschnitt \ref{code:handle-incoming-packages} verarbeitet. 
+Jede eingehende Verbindung wird dabei in einer eigenen Goroutine behandelt, um parallele Verarbeitung mehrerer Verbindungen zu ermöglichen. 
+Zu Beginn wird ein Buffer erstellt, in den die empfangenen Daten eingelesen werden. 
+Über den Rückgabewert von \texttt{conn.Read} wird die Anzahl der tatsächlich empfangenen Bytes bestimmt, die anschließend zu einer Zeichenkette konvertiert werden. \cite{go-net-package-connection}
+Wird im empfangenen Paket der Präfix \texttt{DISCOVER} erkannt, wird geprüft, ob bereits eine bestehende Verbindung zu einem Peer existiert. 
+Falls dies nicht der Fall ist, wird eine Antwort mit dem Inhalt \texttt{PEER RESPONSE} zurückgesendet mithilfe der \texttt{conn.Write}-Methode. 
+Zusätzlich wird die Portnummer aus der empfangenen DISCOVER-Nachricht extrahiert, und die IP-Adresse des Absenders wird aus der Remote-Adresse der Verbindung bestimmt. 
+Aus IP und Port wird eine vollständige Adresse gebildet und in der globalen Variablen \texttt{peerAddress} gespeichert. 
+Der Verbindungsstatus wird anschließend auf \texttt{true} gesetzt, und die erfolgreiche Annahme des Peers wird in den Logs dokumentiert.\\
+\newpage
+Für alle anderen eingehenden Nachrichten wird anhand ihres Inhalts bestimmt, welchem Nachrichten-Typ sie zugeordnet werden in Zeile 24 bis 30 des Codeausschnitts \ref{code:handle-incoming-packages}. 
+Enthält die Nachricht das Schlüsselwort \texttt{fast}, wird der Zähler \texttt{fastQueue} um eins erhöht. 
+Enthält sie das Schlüsselwort \texttt{dynamic}, wird \texttt{dynamicQueue} hochgezählt. 
+Nachrichten mit dem Schlüsselwort \texttt{slow} führen zu einer Erhöhung von \texttt{slowQueue}. 
+Durch diese Zählung wird die aktuelle Anzahl empfangener Pakete je Kategorie kontinuierlich erfasst.
+Insgesamt wird durch diese Architektur erreicht, dass Pakete automatisch und in verschiedenen Intervallen gesendet werden, sobald eine Verbindung zu einem Peer besteht. 
+Die Verarbeitung erfolgt vollständig nebenläufig, wodurch keine Blockierung des Hauptprogramms auftritt und mehrere Peers gleichzeitig bedient werden können. \\
+
+\begin{lstlisting}[style=golang, caption={Funktion zur Handhabung von empfangenen TCP-Paketen}]
+func handleConnection(conn net.Conn, messageChan chan string) {
+	defer conn.Close()
+	buffer := make([]byte, 1024)
+	n, err := conn.Read(buffer)
+	if err != nil {
+		return
+	}
+	message := string(buffer[:n])
+
+	if strings.HasPrefix(message, "DISCOVER ") {
+		if peerAddress != "" {
+			return // Already connected
+		}
+		conn.Write([]byte("PEER_RESPONSE"))
+		if port := utils.ExtractPortFromDiscoverMessage(message); port != "" {
+			ip := utils.GetIPFromRemoteAddr(conn.RemoteAddr().String())
+			peerAddress = net.JoinHostPort(ip, port)
+			connected = true
+			utils.LogInfo("Accepted peer: " + peerAddress)
+		}
+		return
+	}
+
+	if strings.Contains(message, "fast") {
+		fastQueue++
+	} else if strings.Contains(message, "dynamic") {
+		dynamicQueue++
+	} else if strings.Contains(message, "slow") {
+		slowQueue++
+	}
+}
+\end{lstlisting}\label{code:handle-incoming-packages}
+\newpage
+
+\section{Leser-/Schreiber-Synchronisation}\label{leser-schreiber-sync}
+Nachdem alle benötigten Funktionalitäten des Backend erläutert wurden in den Abschnitten \ref{auto-tcp-verbindung} und \ref{auto-tcp-pakete-senden}, wird die Synchronisation zwischen lesenden und schreibenden Zugriffen im Frontend auf den gemeinsam genutzten Message-Channel beschrieben. 
+Die Steuerung der Zugriffe erfolgt mithilfe einer \texttt{sync.RWMutex}-Struktur, die als \texttt{windowMutex} deklariert wird im Codeausschnitt \ref{code:rw-sync}. 
+Dies erfolgt durch das \texttt{sync}-Go-Paket, welches genutzt wird für low-level Synchronisation wie es das Leser-Schreiber-Problem erfordert. \cite{go-sync-package}
+Durch den Einsatz dieser Sperre für das Backend wird sichergestellt, dass mehrere Leseoperationen gleichzeitig ausgeführt werden können, während Schreiboperationen exklusiv erfolgen bzw. im selben Zeitraum nicht möglich sind durch Frontend und Backend.
+Beim Aufruf der Funktion \texttt{updateUI} wird ein exklusiver Lesezugriff durch \texttt{windowMutex.Lock()} in Zeile 7 des Codeausschnitts \ref{code:rw-sync} angefordert. 
+Dieser Aufruf blockiert alle weiteren Lese- und Schreiboperationen, bis der Zugriff wieder freigegeben wird. 
+Die Freigabe erfolgt über \texttt{defer windowMutex.Unlock()}, wodurch gewährleistet wird, dass die Sperre auch bei Auftreten von Fehlern oder frühzeitigem Funktionsende korrekt aufgehoben wird.
+Das beschriebene Vorgehen verhindert, dass während einer Aktualisierung der \acrshort{UI} parallele Lesezugriffe auf die betroffenen Daten erfolgen. 
+Dadurch wird eine konsistente Darstellung der Anwendungszustände gewährleistet, ohne dass es zu inkonsistenten Datenständen kommt. 
+Die Verwendung einer \texttt{RWMutex} ermöglicht gleichzeitig, dass andere Teile des Programms in Situationen ohne aktive Schreiboperationen weiterhin parallel lesend auf die Daten zugreifen können.
+Insgesamt wird durch diesen Mechanismus erreicht, dass die Datenintegrität während der Laufzeit erhalten bleibt. 
+Gleichzeitig wird die gleichzeitige Ausführung von Leseoperationen optimiert, ohne die Konsistenz beim Schreiben zu gefährden.\\
+
+\begin{lstlisting}[style=golang, caption={Synchronisation beim Auslesen des Message-Channels}]
+var (
+    ...
+    windowMutex       sync.RWMutex
+    ...
+)
+func updateUI(state QueueState) {
+	windowMutex.Lock()
+	defer windowMutex.Unlock()
+    ...
+}
+\end{lstlisting}\label{code:rw-sync}
+\newpage
+
+\section{Datenvisualisierung \& UI Updates}\label{datenvisualisierung}
+Nachdem die Synchronisation in Abschnitt \ref{leser-schreiber-sync} realisiert wurde, wird folgend dargestellt, wie die Daten aus \texttt{QueueState} im \acrfull{UI} konsistent visualisiert werden. 
+Als Datengrundlage wird in \ref{code:data-visualisation} der Typ \texttt{QueueState} definiert. 
+In dieser Struktur werden die Längen der drei Buffer in Form von Integern \texttt{FastQueue}, \texttt{DynamicQueue} und \texttt{SlowQueue} sowie der Verbindungsstatus \texttt{Connected} als Boolean erfasst. 
+Durch die JSON-Tags wird zugleich festgelegt, unter welchen Schlüsseln die Werte extern serialisiert und übertragen werden. 
+Auf diese Weise wird eine eindeutige Abbildung der internen Felder auf ein transportfähiges Format erreicht.\\
+
+\begin{lstlisting}[style=golang, caption={QueueState Definition für Daten aus Message-Channel}]
+type QueueState struct {
+	FastQueue    uint `json:"fast"`
+	DynamicQueue uint `json:"dynamic"`
+	SlowQueue    uint `json:"slow"`
+	Connected    bool `json:"connected"`
+}
+\end{lstlisting}\label{code:data-visualisation}
+
+Die Aktualisierung der Oberfläche wird in \ref{code:update-ui} über die Funktion \texttt{updateUI} vorgenommen. 
+Zu Beginn wird die Leser-Schreiber-Synchronisation implementiert, die schon in Abschnitt \ref{leser-schreiber-sync} separat betrachtet wird.
+Dadurch wird sichergestellt, dass die Visualisierung atomar angepasst und während der Aktualisierung nicht von parallelen Lesezugriffen inkonsistent erfasst wird.
+Im nächsten Schritt werden die internen Statusvariablen \texttt{fastSend}, \texttt{dynamicSend} und \texttt{slowSend} aus dem übergebenen \texttt{state} befüllt, ebenso der Verbindungsindikator \texttt{connected}. 
+Anschließend werden die numerischen Werte den UI-Labels zugewiesen: Über \texttt{SetText} wird jeweils ein formatierter Text der Form ``Length: \%d'' angezeigt, sodass die absoluten Längen der Warteschlangen unmittelbar ablesbar werden. \cite{go-fyne-package}
+Dadurch wird eine textuelle, präzise Rückmeldung des aktuellen Systemzustands bereitgestellt.
+Parallel zu den Beschriftungen wird eine visuelle Verdichtung über Balkendiagramme vorgenommen. 
+Hierzu wird ein Maximalwert \texttt{maxValue} von \texttt{100} herangezogen, gegen den die Bufferlängen normiert werden. 
+Die Werte der Balken werden als Quotienten queueLength/maxValuequeueLength/maxValue gesetzt. 
+Durch diese Normalisierung wird eine skalierte Darstellung im Intervall [0,1][0,1] beabsichtigt, wodurch relative Veränderungen in den Werten unmittelbar erkennbar gemacht werden. 
+Der Verbindungsstatus wird aus \texttt{state.Connected} übernommen und abschließend an die Funktion \texttt{updateLEDColor} übergeben. 
+Durch diese Übergabe wird die Farbe eines Status-Indikators angepasst im Frontend, sodass ein visueller Hinweis auf die erreichte oder aufgehobene Verbindung gegeben wird. 
+Bei einer vorhandenen Verbindung wird dieser als in der Farbe Grün angezeigt, andersfalls in der Farbe Rot.
+Durch die Gesamtabfolge wird erreicht, dass Zahlenwerte, Balkenanzeigen und der LED-Indikator synchron und kohärent aktualisiert werden. 
+Damit wird eine Visualisierung des Kommunikationsstatus und der Anzahl erhaltener Pakete bereitgestellt, in der sowohl absolute Zahlen der Pakettypen (über Labels) als auch deren Anzeige im Balkendiagramm, sowie der Konnektivitätszustand (über LED-Farbe) im selben Moment konsistent reflektiert werden. 
+Auf diese Weise wird eine robuste und verständliche UI-Repräsentation des laufenden Systems erzeugt.\\
+
+\begin{lstlisting}[style=golang, caption={Funktion zum Aktualisieren der UI}]
+func updateUI(state QueueState) {
+	windowMutex.Lock()
+	defer windowMutex.Unlock()
+
+	fastSend = state.FastQueue
+	dynamicSend = state.DynamicQueue
+	slowSend = state.SlowQueue
+	connected = state.Connected
+
+	fastLabel.SetText(fmt.Sprintf("Length: %d", fastSend))
+	dynamicLabel.SetText(fmt.Sprintf("Length: %d", dynamicSend))
+	slowLabel.SetText(fmt.Sprintf("Length: %d", slowSend))
+
+	maxValue := float64(100)
+	fastBar.SetValue(float64(fastSend) / maxValue)
+	dynamicBar.SetValue(float64(dynamicSend) / maxValue)
+	slowBar.SetValue(float64(slowSend) / maxValue)
+
+	updateLEDColor(connected)
+}
+\end{lstlisting}\label{code:update-ui}
+
+Im anschließenden Kapitel \ref{diskussion} werden die entwickelten Ergebnisse reflektiert und verglichen mit anderen Möglichkeiten. 

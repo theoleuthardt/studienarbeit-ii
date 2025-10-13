@@ -1,0 +1,59 @@
+\chapter{Theoretische Grundlagen}\label{grundlagen}
+In diesem Kapitel werden die erforderlichen Grundlagen erläutert, um ein tiefgreifenderes Verständnis für die genutzten Technologien zu erhalten. 
+Auf theoretischer Ebene wird das Leser-/Schreiber-Problem und das ISO/OSI-Modell sowie das TCP-IP-Modell näher betrachtet, als Grundlage für den Netzwerkkontext des Projekts.
+Für die Entwicklung des Projekts wird die Programmiersprache Go und speziell für das Frontend das auf Go basierende Framework Fyne verwendet.
+
+\section{Leser-Schreiber-Problem}\label{leserschreiberproblem}
+Nach Christian Maurer wird das Leser-Schreiber-Problem wie folgt definiert: „Im allgemeinen Fall ist der Zugriff auf gemeinsame Daten durch gegenseitigen Ausschluss, d. h. durch die Invariante: nP $\leq$ 1 charakterisiert, wobei nP die Anzahl der Prozesse bezeichnet, die nebenläufig in einem kritischen Abschnitt arbeiten dürfen." \cite[S. 128]{Maurer_2018}.
+Somit entsteht ein Problem beim Zugriff von Leser und Schreiber auf gemeinsame Daten. Nach der Invariante nP kann also nur ein Prozess, der auf Daten zugreift, gleichzeitig im kritischen Abschnitt arbeiten. 
+Zwei Lösungsansätze werden von Maurer definiert: „Wenn Prozesse auf die gemeinsamen Daten nur lesend oder nur schreibend zugreifen, kann diese Restriktion abgeschwächt werden: Wenn nR die Anzahl der aktiven Leser („reader“) und nW die Anzahl der aktiven Schreiber („writer“) (d. h. der Prozesse, die sich lesend bzw. schreibend im kritischen Abschnitt befinden) bezeichnet, reicht es, die Invariante (nW = 0) $\lor$ (nR = 0) $\land$ (nW = 1) zu fordern, d. h. entweder beliebig viele Leser zuzulassen und dabei Schreibern den Eintritt zu verwehren oder keinem Leser und nur einem Schreiber zur gleichen Zeit das Betreten des kritischen Abschnitts zu erlauben.“\cite[S. 129]{Maurer_2018}.
+Demnach wird das Problem als lösbar betrachtet, aber nicht für Leser und Schreiber in \gls{glos:nebenläufigkeit}.
+Die zwei Lösungsansätze nach Maurer, die sich das 1. Leser-Schreiber-Problem und das 2. Leser-Schreiber-Problem nennen, werden wie folgt definiert.
+„Der jeweils erste Leser (nR == 1) befindet sich in Konkurrenz zu den Schreibern und muss ggf. solange blockiert werden, bis ein aktiver Schreiber den kritischen Abschnitt verlassen und das Semaphor rw in seinem Austrittsprotokoll auf 1 gesetzt hat.
+Weitere Leser können dann (d. h., wenn nR > 1) den kritischen Abschnitt ohne Verzögerung betreten; der jeweils letzte Leser muss ihn wieder freigeben." \cite[S. 129]{Maurer_2018}. Dies ist das 1. Leser-Schreiber-Problem als Lösung und priorisiert Leser, wodurch aber nach Maurer keine Fairness zwischen Lesern und Schreibern erreicht wird.
+Alternativ wird den Schreibern der Vorrang erteilt im 2. Leser-Schreiber-Problem: „Sowie ein Schreiber blockiert ist, weil der kritische Abschnitt von aktiven Lesern besetzt ist, dürfen diese zwar ihre Arbeit beenden, aber weitere Leser, die sich um Eintritt bewerben, werden solange verzögert, bis der wartende Schreiber Zutritt hatte." \cite[S. 130f]{Maurer_2018}.
+So wird die Lösung des Problems zwar komplexer durch eine Warteschlange mit Priorität der Schreiber vor Lesern, jedoch wird so ermöglicht sowohl Lesern auch Schreibern Zugriff auf die Daten in optimaler Reihenfolge zu gewährleisten.
+
+\section{ISO-OSI-Modell}\label{osimodell}
+Im Kontext dieses Projekts wird eine Anwendung in Go entwickelt, die Pakete per TCP über das lokale Netzwerk verschickt. 
+Deswegen wird es als hilfreich angesehen das ISO-OSI-Modell kennenzulernen für ein besseres Verständnis der Datenkommunikation zwischen den Instanzen der Desktopanwendung.
+Nach Peter Mandl wird das ISO-OSI-Modell wie folgt definiert: „Das ISO/OSI-Referenzmodell, wobei OSI als Abkürzung für Open Systems Interconnection steht, (kurz: OSI-Modell) teilt die gesamte Funktionalität in sieben Schichten (Abb. \ref{fig:iso-osi-modell-bild}) ein. 
+Jede Schicht stellt der darüberliegenden Schicht bzw. bei Schicht 7 der Anwendung eine Schnittstelle, auch Dienst genannt, zur Nutzung ihrer Funktionen bereit.
+Die unterste Schicht beschreibt die physikalischen Eigenschaften der Kommunikation.
+Verschiedene Schichten sind je nach Netzwerk teilweise in Hardware und teilweise in
+Software implementiert." \cite[S. 2]{Mandl_2024}.
+Im Fall dieses Projekts werden auf Schicht 7 die Nachrichten der TCP-Pakete erstellt, also auf der Ebene des Go-Codes.
+Diese werden an Schicht 4 übergeben, der Transportschicht, zum Versenden der Nachricht im TCP-Paket.
+Das TCP-Segment wird von Schicht 4 an Schicht 3, der Vermittlungsschicht übergeben mit zusätzlicher Angabe von Quell- und Ziel-IP-Adresse für den Versand im lokalen Netzwerk.
+Das erstellte IP-Segment wird dann folgend in der 2. Schicht, der Sicherungsschicht mit den MAC-Addressen und Checksumme des Absenders und des Empfängers versehen mithilfe der Informationen im IP-Segment.
+Schließlich werden die übergebenen Bits von Schicht 2 zu Schicht 1 physikalisch an das Empfängersystem des TCP-Pakets übermittelt über das Transitsystem.
+Auf der Seite des Empfängers werden die eben beschriebenen Schritte nun in umgekehrter Reihenfolge von Schicht 1 bis 7 durchlaufen, bis im Backend der zweiten Instanz des Programms das Paket mit enthaltenen Nachricht angekommen ist und weiter verarbeitet werden kann \cite[S. 4]{Mandl_2024}.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.45]{bilder/ISO-OSI-Modell.png}
+    \caption{ISO-OSI-Modell aus \cite[S. 3]{Mandl_2024}}
+    \label{fig:iso-osi-modell-bild}
+\end{figure}
+
+\section{TCP-IP-Modell}\label{tcp}
+Im Folgenden wird das TCP/IP-Modell dargestellt und dessen Anwendung wird im Kontext der entwickelten Anwendung aufgezeigt.
+Mandl definiert das TCP-IP-Referenzmodell wie folgt: „Es hat vier Schichten, wobei die Internetschicht (Netzwerkschicht) und die Transportschicht die tragenden Schichten sind. In der Netzwerkschicht wird neben einigen Steuerungsprotokollen im Wesentlichen das \gls{glos:IP} (Internet Protocol, IP) benutzt." \cite[S. 6]{Mandl_2024}.
+Nach Mandl wird in der Transportschicht, also Schicht 3 in Abbildung \ref{fig:tcp-ip-modell-bild}, das verbindungsorientierte TCP-Protokoll oder das leichtgewichtige, verbindungslose UDP-Protokoll verwendet. \cite[S. 7]{Mandl_2024}
+Im Falle der zu entwickelnden Anwendung wird an dieser Stelle das TCP-Protokoll eingesetzt.
+Die vier Schichten des TCP/IP-Modells werden in der entwickelten Anwendung auf unterschiedliche Weise genutzt. 
+In der Anwendungsschicht werden die spezifischen Pakettypen (fast, dynamic, slow) definiert und verarbeitet. 
+Die Transportschicht stellt durch TCP die zuverlässige Übertragung dieser Pakete sicher, während die Internetschicht die Weiterleitung zwischen den kommunizierenden Instanzen im lokalen Netzwerk übernimmt. 
+Die Netzzugangsschicht ganz unten in Abbildung \ref{fig:tcp-ip-modell-bild} wird für die physische Übertragung der Daten über das Ethernet-Netzwerk verwendet.
+Falls zwei Instanzen der Anwendung auf demselben Hostsystem ausgeführt werden, wird das Modell trotzdem vollständig durchlaufen, nur wird in der Netzzugangsschicht das Loopback-Interface des Hostsystems verwendet für den Verweis aufs eigene System.
+Die Wahl des TCP-Protokolls wird durch die spezifischen Anforderungen der Anwendung aus Kapitel \ref{problemstellung} begründet. 
+TCP gewährleistet durch seinen verbindungsorientierten Charakter die vollständige und korrekte Übertragung aller Pakete, was für die präzise Zählung der verschiedenen Pakettypen essentiell ist. 
+Zusätzlich wird durch die Sequenzierung der Pakete eine geordnete Verarbeitung ermöglicht, die für die Visualisierung der zeitlichen Abläufe wichtig ist.
+Im Gegensatz zu UDP, welches keine Garantie für die Ankunft oder Reihenfolge der Pakete bietet, wird durch TCP die für das Leser-/Schreiber-Problem notwendige Zuverlässigkeit gewährleistet.
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.45]{bilder/TCP-IP-Modell.png}
+    \caption{TCP-IP-Modell aus \cite[S. 7]{Mandl_2024}}
+    \label{fig:tcp-ip-modell-bild}
+\end{figure}
+
+Im nachfolgenden Kapitel \ref{entwurf} wird der Entwurf der Desktopanwendung näher erläutert anhand von Architektur- und Komponentendiagrammen.

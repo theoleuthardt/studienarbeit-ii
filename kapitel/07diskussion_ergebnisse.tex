@@ -1,0 +1,23 @@
+\chapter{Diskussion von Ergebnissen}\label{diskussion}
+Zur Einordnung der entwickelten Algorithmen für die Implementierung der Desktopanwendung werden nun die gewählten Lösungsansätze reflektiert und verglichen mit anderen Ansätzen. 
+Zusätzlich werden die Limits und Skalierbarkeit der Software analysiert und alle noch bekannten Probleme dokumentiert.
+
+% Reflexion aktueller Lösung
+Mithilfe der in Kapitel \ref{algorithmen} erläuterten Algorithmen zur Implementierung des Frontend und Backends wird eine Lösung entwickelt mit der das Ziel einer Anwendung zur praktischen Umsetzung und Visualisierung des Leser-Schreiber-Problems erreicht werden kann.
+Gelöst wird die Kommunikation zwischen Frontend und Backend über einen Message-Channel, was alternativ durch eine REST-Schnittstelle ersetzt werden könnte.
+Dies würde zusätzlich die Möglichkeit eröffnen beim Frontend ein Web-Framework einzusetzen im Vergleich zu einem nativ in Go implementierten Frontend.
+Zwar wird von den Autoren dieser schriftlichen Arbeit die Systemarchitektur so betrachet, dass für Entwickler mit Hintergrundwissen in der Webentwicklung die Implementierung des Frontends in einem Web-Framework deutlich weniger Arbeit bedeuten würde, trotz des erhöhten Aufwands durch die REST-Schnittstelle.
+Jedoch wurde eine Frontend-Lösung entwickelt, die mindestens genauso performant ist, wenn nicht sogar performanter abschneidet.
+
+% Aktuelle Limits und Skalierbarkeit?
+Aktuell ist es nur möglich sich mit einer weiteren Backend-Instanz der Anwendung im lokalen Netzwerk zu verbinden, dennoch würde es möglich sein, durch die \gls{glos:nebenläufigkeit} der Prozesse für die Verarbeitung von TCP-Verbindungen im Backend mehrere TCP-Verbindungen zu verschiedenen Hostsystemen aufbauen zu können.
+Dies würde jedoch mehr Prüfungen bedingen, damit durch zwei oder mehr Verbindungen keine Konflikte in der Datenverarbeitung verursacht werden.
+In den aktuell drei Intervallen, in denen die Nachrichten in den TCP-Paketen versendet und empfangen werden, werden keine merkbar hohen Latenzen oder Auslastungen im Netzwerk beobachtet, weswegen in diesem Bereich der Anwendung kein Limit erkannt werden kann.
+Problematisch würde es möglicherweise werden, sobald mehrere Anwendungsinstanz-Paare in hoher Anzahl in einem gemeinsamen lokalen Netzwerk genutzt werden würde bis die jeweilige Bandbreite des Netzwerkes vollständig ausgelastet wäre bzw. überschritten werden würde.
+
+% Aktuelle Probleme und bekannte Bugs?
+Zurzeit werden bei der Nutzung der Anwendung keine Bugs erkannt durch bisherige Tests, jedoch wurde bisher nicht absolut jedes Szenario für die Nutzung der entwickelten Anwendung ausprobiert.
+Getestet wird während der Entwicklung mit zwei Instanzen der kompilierten Software auf einem Hostsystem und einer TCP-Verbindung über das Loopback-Interface.
+Ebenfalls wird separat erprobt, ob zwei verschiedene Geräte in einem lokalen Netzwerk funktionieren, was erfolgreich bestätigt werden konnte.
+Bei der Entwicklung wurde zusätzlich auf dem Betriebssystem MacOS getestet, was bei der Kompilierung zu unbekannten und teilweise nicht gelösten Problemen führte.
+Demnach wird die Anwendung vorerst nur für Windows und Linux bereit gestellt.

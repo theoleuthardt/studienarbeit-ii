@@ -1,0 +1,42 @@
+\chapter{Aufzählungen}\label{ch:aufzählungen}
+Numerierung:
+
+Kapitel (\verb|chapter|) können in
+\begin{enumerate}
+    \item Unterkapitel (\verb|section|) und
+    \item Unter-Unterkapitel (\verb|subsection|), usw.
+\end{enumerate}
+gegliedert werden.
+\\ 
+
+Aufzählung:
+
+Kapitel (\verb|chapter|) können in
+\begin{itemize}
+    \item Unterkapitel (\verb|section|) und
+    \item Unter-Unterkapitel (\verb|subsection|), usw.
+\end{itemize}
+gegliedert werden.
+\\
+
+Mit \verb|vspace()| können die Abstände manuell angepasst werden:
+\begin{itemize}
+    \vspace{-1em}
+    \item negative Werte zum verkleinern,
+    \vspace{2em}
+    \item positive, um den Abstand zu vergrößern.
+\end{itemize}
+\vspace{2em}
+
+Man kann auf alle Elemente über ihre Label verweisen:
+\begin{itemize}
+    \vspace{-1em}
+    \item \autoref{ch:aufzählungen}
+    \vspace{-1em}
+    \item \autoref{fig:single}
+    \vspace{-1em}
+    \item \autoref{table:tab3}
+    \vspace{-1em}
+    \item \autoref{lst:cli}
+\end{itemize}
+Ausnahmen dazu sind Kapitel, die nicht im Inhaltsverzeichnis angezeigt werden und Bilder/Codeabschnitte/Tabellen ohne Caption, die dementsprechend auch nicht im jeweiligen Verzeichnis gelistet werden.

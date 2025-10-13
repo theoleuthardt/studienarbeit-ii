@@ -1,0 +1,172 @@
+\chapter{Tabellen}\label{ch:tabellen}
+Mit Tabellen kann man super viele coole Sachen machen!
+\begin{table}[H]
+    \centering
+    \begin{tabular}{c}
+         Zum Beispiel Textpassagen hervorheben\\
+         ohne nervige Anpassungen in der Ausrichtung\\
+    \end{tabular}
+    \label{table:tab1}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|c|}
+         \hline
+         Auf ganz viele verschiedene Arten\\
+         (ist das cool!)\\
+         \hline
+    \end{tabular}
+    \label{table:tab2}
+\end{table}
+
+Hier ist ein Beispiel für eine ganz einfach Tabelle:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+         \hline
+         & & &  \\
+         \hline
+         & & &  \\
+         \hline
+         & & &  \\
+         \hline
+    \end{tabular}
+    \caption{Einfache Tabelle}
+    \label{table:tab3}
+\end{table}
+
+Ein Beispiel für eine coole Tabelle mit Tabellenkopf:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|l|}
+         \hline
+         & & &  \\
+         \hline
+         \hline
+         & & &  \\
+         \hline
+         & & &  \\
+         \hline
+    \end{tabular}
+    \caption{Tabelle mit Tabellenkopf}
+    \label{table:tab4}
+\end{table}
+
+Eine noch coolere Tabelle mit Legende:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|}
+         \hline
+         \textbf{Ausrichtung}\\
+         \hline
+         Beispieltext\\
+         \hline
+    \end{tabular}
+    \begin{tabular}{|l|c|r|}
+         \hline
+         links & mitte & rechts\\
+         \hline
+         damit man & die Ausrichtung & richtig sieht.\\
+         \hline
+    \end{tabular}
+    \caption{Tabelle mit Legende}
+    \label{table:tab5}
+\end{table}
+
+Man kann mehrzeilige Zellen erzeugen, in dem man (1) kein \verb|\hline| zwischen die Zeilen schreibt, oder (2) durch die Verwendung von \verb|multirow|.
+\begin{table}[H]
+    \centering
+    \footnotesize
+    \begin{tabular}{|l|l|l|l|}
+         \hline
+         (1) & & &  \\
+         \hline
+         \hline
+         Um den      & zu sehen,  & Sinn, in & zu gucken, \\
+         Unterschied & ergibt es  & den Code & LG. \\
+         \hline
+    \end{tabular}
+    \begin{tabular}{|l|l|l|l|}
+        \hline
+         (2) & & & \\
+        \hline
+        \hline
+        \multirow{2}{5em}{Um den Unterschied} & \multirow{2}{4em}{zu sehen, ergibt es} & \multirow{2}{4em}{Sinn, in den Code} & \multirow{2}{4.5em}{zu gucken, LG.} \\
+        \\ 
+        \hline 
+    \end{tabular}
+    \caption{Tabelle mit verbundenen Zeilen} (Ich hab keine Ahnung, warum die vertikalen Striche fehlen.)
+    \label{table:tab6}
+\end{table}
+\clearpage
+
+Mit \verb|multicolumn| kann man Zellen horizontal verbinden:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        \multicolumn{3}{|l|}{Das kann dann zum Beispiel}\\
+        \hline
+        so aussehen,       & \multicolumn{2}{|l|}{wobei ich mir ehrlich}\\
+        \hline
+        \multicolumn{3}{|l|}{unsicher bin, ob man multicolumn mit multirow kombinieren kann.}\\
+        \multicolumn{3}{|l|}{Deshalb sind diese Zeilenumbrüche „manuell“.}\\
+        \hline
+        Mehr Beispieltext   & fällt mir an dieser Stelle & auch gar nicht mehr ein.\\
+        \hline
+        Ich denke in diesem & Maß gibt es auch           & eigentlich keine\\
+        \hline
+        \multicolumn{3}{|c|}{Anwendungsfälle, zumindest nicht beim}\\
+        \hline
+        wissenschaftlichen  & Das ist aber eine          & falls ihr mal einen \\
+        Schreiben.          & super Vorlage,             & Projektsteckbrief machen müsst.\\
+        \hline
+        \multicolumn{2}{|l|}{Viele liebe Grüße!}         & :D\\
+        \hline
+    \end{tabular}
+    \caption{Tabelle mit verbundenen Spalten}
+    \label{table:tab7}
+\end{table}
+
+Und wenn man das alles kombiniert, kann man zum Beispiel supercoole Matrizen in seine Arbeit einbinden:
+\begin{table}[H]
+    \begin{tabular}{|c|}
+        \hline
+        \multirow{2}{*}{Repository} \\
+        \\
+        \hline
+        \hline
+        \multirow{2}{*}{Card} \\
+        \\ 
+        \hline \hline
+        \multirow{2}{*}{Verification} \\
+        \\ 
+        \hline
+    \end{tabular}
+    \begin{tabular}{|l|}
+        \hline
+        \multirow{2}{*}{Profile} \\
+        \\
+        \hline
+        \hline
+        devlocal\\ \hline
+        dev/test/prod\\ \hline
+        \hline
+        devlocal\\ \hline
+        dev/test/prod\\ \hline
+    \end{tabular}
+    \begin{tabular}{|c|c|c|c|c|c|c|}
+        \hline
+        Spring&Server&Data&Test&Private&Public&Website\\
+        Boot&Port&Source&User&Key Path&Key Path& URL\\
+        \hline
+        \hline
+        X & X & X & X & X & X & X \\ \hline
+        X &   & X &   & X & X & X \\ \hline % ihr könnt einrücken für Übersichtlichkeit
+        \hline
+        X&X&&X&&&\\ \hline
+        X&&&&X&&\\ \hline                   % aber wenn ihrs nicht macht, kommt das gleiche dabei raus
+    \end{tabular}
+    \caption[Supercoole Matrix!!!]{Notwendige Properties für die jeweiligen Profile}
+\end{table}

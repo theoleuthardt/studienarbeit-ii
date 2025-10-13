@@ -1,0 +1,80 @@
+\chapter{Entwurf}\label{entwurf}
+In diesem Kapitel wird die Struktur und der Aufbau der zu entwickelnden Anwendung in Go betrachtet und beschrieben.
+Dafür wird folgend in Teilabschnitt \ref{systemarchitektur} die Systemarchitektur erläutert für die Interaktion zwei Instanzen der Software.
+In den darauf folgenden Abschnitten \ref{frontend} und \ref{backend} wird dann tiefgreifender jeweils auf die Struktur des Frontends und Backends und die Vorgänge in ihnen eingegangen.
+
+\section{Systemarchitektur}\label{systemarchitektur}
+In Abbildung \ref{fig:systemarchitekturdiagramm} wird das geplante System dargestellt, womit zwei Instanzen der Desktopanwendung demonstriert werden, die eine Verbindung per TCP aufbauen.
+Zusätzlich wird der Datenfluss durch die Pfeile dargestellt.
+Bei der Verbindung wird ein Port in der Range von 50500 bis 50600 gewählt, damit die Möglichkeit für Portkonflikte auf dem Hostsystem reduziert wird.
+Diese Range wird bewusst gewählt, um die Kollision mit typischen Standardports vorzubeugen und genug weitere Ports für parallele Instanzen nutzen zu können.
+Dadurch wird vermieden im Vergleich zur Nutzung eines bestimmten Ports, dass dieser durch die Ausführung einer anderen Instanz des Programms belegt ist und das Backend der Anwendung nicht gestartet werden kann.
+Eine Instanz der Desktopanwendung wird zusammengesetzt aus dem Backend, einem Message-Channel als globalen Speicherort und Kommunikationspunkt zwischen Frontend und Backend, sowie aus dem Frontend für die Datenvisualisierung.
+Das Backend wird dafür verwendet Buffer als Paketinhalte zu generieren, diese ans Backend der anderen Instanz zu versenden und eingehende Pakete zu verarbeiten.
+Ebenfalls werden im Backend die Pakete empfangen und dessen Inhalt je nach Inhalt in verschiedenen Teilen des Message-Channels gespeichert. \\
+\\
+Dies wird als Schnittstelle zwischen Frontend und Backend eingesetzt, siehe dazu die Struktur einer Anwendungsinstanz in Abbildung \ref{fig:systemarchitekturdiagramm}.
+Mithilfe dieses Message-Channels werden die Daten für das Frontend verfügbar gemacht, jedoch bedingt dies eine globale Definition unabhängig von Frontend und Backend.
+Schließlich werden die Daten aus dem Message-Channel ausgelesen durch das Frontend und visualisiert.
+So kann der Datenfluss in Abbildung \ref{fig:systemarchitekturdiagramm} durch die Pfeile nachverfolgt werden.
+Hier wird der Message-Channel in Form eines Speicherorts für Daten und Schnittstelle zur Kommunikation bevorzugt gegenüber einer REST-Schnittstelle, da sowohl Frontend und Backend in Go entwickelt werden und damit die Komplexität des entwickelten Code vermindert werden kann.
+Zudem wird dadurch weitere Kommunikation über das Netzwerk eingespart, wodurch Latenzzeit reduziert wird und die Reaktionsfähigkeit der Anwendung verbessert wird.
+Der gemeinsame Zugriff auf die Daten des Message-Channels durch Frontend und Backend bringt das Leser-Schreiber-Problem hervor und wird durch die Nutzung von Synchronisation gelöst.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{bilder/Systemarchitekturdiagramm.png}
+    \caption{Systemarchitekturdiagramm}
+    \label{fig:systemarchitekturdiagramm}
+\end{figure}
+
+\section{Frontend}\label{frontend}
+Wie in Abschnitt \ref{systemarchitektur} innerhalb der Systemarchitektur bereits angeschnitten wird, werden mithilfe des Frontends die Daten des Backends visualisiert.
+Auf der Abbildung \ref{fig:frontendarchitekturdiagramm} werden die Komponenten des Frontends und dessen Datenfluss dargestellt zur Veranschaulichung der Elemente innerhalb des \acrlong{UI}.\\
+\\
+Die zu visualisierenden Daten werden aus dem Message-Channel gelesen und in Form eines Queue-States lokal gespeichert.
+In diesem Kontext werden Buffer-Queues in Form von Integern erstellt aus den Queue-States und stellen die aktuelle Anzahl dar, wie oft eine Art von Paket seit dem Start der Anwendung und Initialisierung empfangen wurde vom Backend.
+Die drei Arten der Buffer-Queue sind Slow, Dynamic und Fast und stellen die jeweilige Paketart dar.
+Diese werden im folgenden Teilabschnitt \ref{backend} zur Architektur des Backends genauer erklärt.
+Damit die aktuelle Anzahl der jeweiligen Paketart visuell dargestellt werden kann, könnte der Inhalt des Integers, also die Zahl schlicht abgebildet werden.
+Da jedoch die Werte laufend aktualisiert werden, würden so nur Zahlen hoch zählen.
+Damit dies etwas besser für den Nutzer repräsentiert wird, werden stattdessen Balkendiagramme (Bars) verwendet, die dynamisch an den aktuellen Wert aus dem Message-Channel angepasst werden.\\
+\\
+Gleichermaßen wird der aktuelle Verbindungsstatus der Anwendung zu einer anderen Instanz durch den Message-Channel an das Frontend übermittelt.
+Der Status wird laufend aktualisiert und demnach zu jeder Zeit im Message-Channel aktuell gehalten.
+Der Indikator für den Verbindungsstatus wird farbenspezifisch abhängig davon gerendert, ob die zwei Backendinstanzen verbunden sind oder nicht.
+Falls eine Verbindung aktiv sein sollte, wird der Indikator in Grün gerendert, andernfalls in der Farbe Rot.
+Für eine minimal erhöhte Barrierefreiheit wird ein Button im \acrfull{UI} des Frontends implementiert, der dafür zuständig ist, wahlweise zwischen dem standardmäßigen Darkmode und einem Lightmode wechseln zu können.\\
+\\
+Zur Visualisierung des Leser-Schreiber-Problems wird das Konzept angewendet eine Verzögerung in der Erhöhung bzw. Verminderung der drei dargestellten Werte bemerkbar zu machen.
+Bei jedem Auslesen der Daten aus dem Message-Channel durch das Frontend wird während des Lesens der Message-Channel gesperrt für das weitere Schreiben des Backends auf die Daten.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{bilder/Frontendarchitektur.png}
+    \caption{Frontendarchitekturdiagramm}
+    \label{fig:frontendarchitekturdiagramm}
+\end{figure}
+
+\section{Backend}\label{backend}
+Für die Strukturierung des Backends nach Abbildung \ref{fig:backendarchitekturdiagramm} wird das Backend in folgende Komponenten unterteilt.
+Beim Start der Desktopanwendung wird ein TCP-Server aufgesetzt, der aus drei Teilkomponenten besteht und durch den der Kern des Backends dargestellt wird.
+Dieser besteht aus dem Port-Listener, dem Connection-Handler und einem Message-Sender.
+Der Port-Listener wird verwendet, um einen beliebig freien Port in der vorgegeben Range zu belegen und auf Verbindungsanfragen anderer Backendinstanzen zu hören bzw. zu warten.
+Dem Connection-Handler wird bei erfolgreicher Verbindung (erfolgreichem Handshake) die Adresse des der anderen Backendinstanz übergeben und anschließend werden von ihm erhaltenen TCP-Pakete verarbeitet.
+Deren Inhalt und der aktuelle Verbindungsstatus wird vom Connection-Handler in ein Queue-State verpackt und anschließend im Message-Channel gespeichert für das Versenden der Daten an das Frontend.
+Parallel dazu werden durch den Message-Sender zufällig gewählte Bufferlänge in Paketen verpackt und in verschiedenen Intervallen verschickt.
+Fast-Pakete werden hier in Intervallen von $200\,\mathrm{ms} \pm 50\,\mathrm{ms}$ versendet, Dynamic-Pakete in 80\% der Fälle in 50ms Intervallen mit 20\% längeren von 3 Sekunden und Slow-Pakete in einem Zeitintervall von $1\,\mathrm{s} \pm 200\,\mathrm{ms}$.
+Die aktuelle Verbindung zwischen den Backendinstanzen wird durch den Connection-Monitor überwacht und falls der jeweils andere Verbindungspartner nicht mehr vorhanden ist bzw. nicht antwortet, wird die Verbindung getrennt.
+Wird doch eine Antwort erhalten wird die Verbindung weiter aufrecht erhalten und in beiden Fällen eine zugehörige Information geloggt.
+Damit werden alle notwendigen Funktionalitäten eines TCP-Servers einbezogen für Entwicklung, womit automatisch Pakete versendet und empfangen werden, Daten verarbeitet werden können und sicher per Message-Channel an das Frontend übergeben werden können.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.6]{bilder/Backendarchitektur.png}
+    \caption{Backendarchitekturdiagramm}
+    \label{fig:backendarchitekturdiagramm}
+\end{figure}
+
+Folgend werden die Algorithmen zur Implementierung der in diesem Kapitel dargelegten Struktur erläutert und anhand von Codeausschnitten vertieft.
+Dabei werden die wichtigsten Funktionalitäten der Software beleuchtet.

@@ -1,0 +1,15 @@
+\chapter{Einleitung}\label{einleitung}
+In heutigen modernen Softwaresystemen lässt sich eine stetige Zunahme an vernetzten Anwendungen beobachten.
+Diese Entwicklung in der Nutzung von Softwaresystemen wird durch die wachsende Bedeutung von Cloud-Computing, Microservices und verteilten Architekturen vorangetrieben.
+Darin interagieren Programme miteinander, um über verschiedene Protokolle Daten auszutauschen und um komplexe Aufgaben in verteilten Systemen aufteilen zu können.
+In diesem Kontext kann das gleichzeitige Lesen und Schreiben derselben Daten eine Herausforderung darstellen mit verheerenden Konsequenzen in einem System mit mehreren Prozessen, auch \gls{glos:verteiltes_system} unter anderem genannt.
+So können ohne vorhandene Synchronisationsmethoden Dateninkonsistenz und Performanzprobleme auftreten und dadurch die Integrität und Verfügbarkeit von Systemen gefährden.
+Um dieses Leser-/Schreiber-Problem praxisnah zu untersuchen und zu visualisieren, wird im Rahmen dieser Arbeit eine Desktop-Applikation in der Programmiersprache GoLang entwickelt, die zwischen ihrer und einer anderen Instanz der Anwendung eine TCP-Verbindung herstellt.
+Die Wahl von Go als Programmiersprache begründet sich durch die eingebauten Concurrency-Mechanismen (siehe \gls{glos:nebenläufigkeit}) und die Unterstützung für Netzwerkprogrammierung durch importierbare Software-Pakete.
+Mithilfe der Desktopanwendung soll der Nutzer die Möglichkeit haben, die Lösung des Problems grafisch dargestellt zu erleben.\\
+\\
+Die nachfolgende Arbeit gliedert sich in mehrere aufeinander aufbauende Kapitel.
+Im folgenden Kapitel wird die Problemstellung präzisiert und die spezifischen Anforderungen an die zu entwickelnde Lösung definiert.
+Danach werden die benötigten theoretischen Grundlagen erklärt und folgend die Strukturen des Entwurfs jeweils für Frontend und Backend der entwickelten Anwendung näher betrachtet. 
+Nachdem alle relevanten Strukturen und Abläufe der Software im Entwurf erläutert wurden, werden die konkreten Algorithmen für die Implementierung aller Funktionalitäten der Software im Kapitel Algorithmen analysiert.
+Im Anschluss werden die Ergebnisse der abgeschlossenen Softwareentwicklung diskutiert und zum Ende wird ein Fazit gezogen.

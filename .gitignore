@@ -1,0 +1,26 @@
+# LaTeX temporäre Dateien
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.vrb
+*.bcf
+*.run.xml
+*.lof
+*.lot
+
+# Kompilierte PDFs (optional - wenn du PDFs nicht versionieren willst)
+# *.pdf
+
+# Editor-spezifisch
+.vscode/
+*.swp
+*~
+/.idea/

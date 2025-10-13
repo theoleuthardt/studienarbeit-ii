@@ -1,0 +1,73 @@
+\chapter{Abbildungen}\label{ch:abbildungen}
+
+\section{Bilder}\label{ch:bilder}
+
+Hier seht ihr eine supercoole Abbildung ...\\
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.06]{bilder/HWR.png}
+    % für die Größe könnt ihr das bild skalieren (scale)
+    % die Höhe/Breite fest festlegen (z. B. width = 20em/400pt/etc)
+    % oder abhängig von der Seiten-/Textbreite und -höhe skalieren (z. B. width=1.0\linewidth)
+    \caption{Ein einzelnes Bild}
+    \label{fig:single}
+\end{figure}
+
+
+... gefolgt von einer fast noch cooleren Abbildung, weil die zweite einen Rahmen hat. Die Caption ist über oder unter dem Bild, abhängig davon, ob ihr die \verb|\caption{}| Zeile über oder unter die \verb|\includegraphics[]{}| Zeile schreibt, auch bei Codeausschnitten und Tabellen.\\
+In Informatik-Publikationen wird die Caption einer Tabelle „vor“ der Tabelle platziert. Bei Abbildungen, Grafiken, Codeausschnitten, etc. wird es „danach“ eingefügt.\\ % das ist ein direktes Zitat von Frau Monett Diaz
+
+\begin{figure}[H]
+    \centering
+    \caption[Einzelne Bilder mit Rahmen]{Ein einzelnes Bild mit Rahmen}
+    \fbox{\includegraphics[width=0.3\linewidth]{bilder/HWR.png}}
+    \label{fig:singlefbox}
+\end{figure}
+
+
+Default ist die Caption auch das, was im Abbildungsverzeichnis angezeigt wird, man kann das aber anpassen (siehe Code).\\
+\verb|\caption[Beschreibung im Abbildungsverzeichnis]{Beschreibung im Text}|
+
+Bei ähnlichen Abbildungen oder um Platz zu sparen, können \verb|subfloat|s benutzt werden:\\
+
+\begin{figure}[H]
+    \centering
+    \caption{Zwei Mal das HWR Logo}
+    \subfloat[HWR Logo]{\fbox{\includegraphics[height=0.04\textheight]{bilder/HWR.png}}
+    \label{fig:multi1}}
+    \subfloat[auch das HWR Logo]{\fbox{\includegraphics[height=0.04\textheight]{bilder/HWR.png}}
+    \label{fig:multi2}}
+    \label{fig:multiple}
+\end{figure}
+
+Mit \verb|wrapfigure| können Bilder auch in den Text eingebunden werden, dazu kein Beispiel, denn ich versteh's nicht.
+\clearpage
+
+\section{Code}\label{ch:code}
+Das Aussehen der Codeausschnitte kann im Dokumentenkopf in \verb|main.tex| definiert werden.\\
+Bei der Nummerierung wird das Kapitel vorgestellt. Warum? Weiß ich nicht. 
+
+Die Beispiele sind aus einem alten PTB und dementsprechend kontextual unwichtig. Von Codeausschnitten mit schwarzem Hintergrund ist abzuraten, da ihr vermutlich Punktabzug für die Lesbarkeit kriegt.\\
+
+\lstset{style=cli}
+\begin{lstlisting}[caption=CLI Codebeispiel,label={lst:cli}]
+> dotnet ef migrations add "Titel"
+\end{lstlisting}
+Durch die Anpassung der Listsets kann das Highlighting verbessert werden, siehe \verb|main.tex| etwa Zeile 100.\\
+
+\lstset{style=ps}
+\begin{lstlisting}[caption=PowerShell Codebeispiel,label={lst:ps}] 
+function CreateSubnetAndDevices {
+    param (
+        [int]$startId,
+        [int]$endId,
+        [string]$baseIp,
+        [int]$devicesPerSubnet,
+        [int]$baseSubnetId = 0
+    )
+    
+    $userId = "USERID"
+    $managerId = "MANID"
+\end{lstlisting}
+
