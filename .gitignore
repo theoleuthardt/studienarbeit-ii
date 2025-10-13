@@ -15,9 +15,10 @@
 *.run.xml
 *.lof
 *.lot
+*.lol
 
-# Kompilierte PDFs (optional - wenn du PDFs nicht versionieren willst)
-# *.pdf
+# Kompilierte PDFs
+*.pdf
 
 # Editor-spezifisch
 .vscode/
