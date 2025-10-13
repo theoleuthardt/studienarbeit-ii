@@ -33,4 +33,4 @@ jobs:
             **Kompiliert am:** ${{ github.event.head_commit.timestamp }}
             **Commit:** ${{ github.sha }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
