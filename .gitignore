@@ -18,6 +18,7 @@
 *.lol
 
 # Kompilierte PDFs
+/out
 *.pdf
 
 # Editor-spezifisch
