@@ -1,0 +1,47 @@
+name: Compile LaTeX and Create Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Compile LaTeX document
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          args: -pdf -interaction=nonstopmode -outdir=out
+          post_compile: |
+            mkdir -p out/kapitel
+            pdflatex -output-directory=out main.tex
+            bibtex out/main
+            pdflatex -output-directory=out main.tex
+            pdflatex -output-directory=out main.tex
+
+      - name: Upload PDF artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: main-pdf
+          path: out/main.pdf
+
+      - name: Get current date and time
+        id: date
+        run: |
+          echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_OUTPUT
+          echo "datetime=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: release-${{ steps.date.outputs.datetime }}
+          name: Release ${{ steps.date.outputs.date }}
+          files: out/main.pdf
+          body: |
+            LaTeX document compiled on ${{ steps.date.outputs.date }}
+            This release contains the compiled PDF of the project documentation.
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
