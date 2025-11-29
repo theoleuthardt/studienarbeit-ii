@@ -41,7 +41,6 @@ jobs:
           name: Release ${{ steps.date.outputs.date }}
           files: out/main.pdf
           body: |
-            LaTeX document compiled on ${{ steps.date.outputs.date }}
-            This release contains the compiled PDF of the project documentation.
+            This release contains the latest version of our studienarbeit.
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
