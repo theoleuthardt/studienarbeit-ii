@@ -1,33 +1,3 @@
 \chapter{Problemstellung}\label{problemstellung}
-% Was ist das eigentliche Problem
-Wie schon in Kapitel \ref{einleitung} erwähnt, wird es zum Problem in einem \gls{glos:verteiltes_system}, wenn durch zwei Prozesse versucht wird auf dieselben Daten zuzugreifen in Form von gleichzeitigem Lesen und Schreiben.
-Dies ist dem Leser-Schreiber-Problem zuzuschreiben und verschiedene kritische Probleme werden dadurch verursacht: Gleichzeitiges Lesen und Schreiben derselben Daten führt zu Datenkorruption, inkonsistente Zustände werden durch unkoordinierte Zugriffe erzeugt und Performanzprobleme können daraus resultieren.
-Beispielsweise wird jene Problematik im Falle eines \gls{glos:nas} in einem verteilten System aus zwei Computern in einem lokalen Netzwerk und dem \gls{glos:nas}-Server möglicherweise auftreten.
-Falls durch beide Computer auf die gleiche Textdatei in Form von gleichzeitigem Lesen oder Schreiben zugegriffen wird, kann das Leser-Schreiber-Problem auftreten und Inkonsistenzen treten auf im Text der Textdatei.
-So können verschiedene Wörter oder Sätze geschrieben werden durch Computer 1, die Computer 2 aktuell noch nicht auslesen kann, da das gleichzeitige Schreiben und Lesen auf die Datei nicht möglich ist. 
 
-\section{Problemrelevanz}\label{problemrrelevanz}
-% Warum ist es relevant?
-Da dieses Problem wie im zuvor genannten Beispiel, durch gleichzeitig lesend und schreibende Prozesse auf demselben Computer oder in vielen anderen technischen Szenarien auftreten kann wie Cloud Computing oder bei Microservices, wird die hohe Relevanz dieses Problems für das Verständnis verteilter Systeme deutlich. 
-Obwohl bereits etablierte Lösungsansätze existieren, wird eine fundierte Auseinandersetzung mit dieser Thematik als essentiell für den Einstieg in verteilte Systeme betrachtet (nähere Erläuterung des Leser-Schreiber-Problems und dessen Lösungen in Kapitel \ref{leserschreiberproblem}).
-
-\section{Was fehlt bisher?}\label{wasfehlt?}
-% Was fehlt bisher?
-Wird versucht das Leser-Schreiber-Problem besser zu verstehen, vor allem durch visuell-lernende Menschen, dann werden diese nur bedingt Visualisierungen finden im Internet neben vielen mathematischen Formeln und Darstellungen.
-Um die Lösungen dieses Problems greifbarer zu machen, würde es Sinn ergeben Diagramme bzw. ein Modell zu erstellen, womit gleichzeitig das Problem und auch die vorhandenen Lösungen direkt auf der Hand liegen würden.
-Jedoch wird ein Mangel an Interaktivität festgestellt, die zum Lernerfolg beitragen könnte.
-So würde eine Desktop-Applikation helfen, den gleichzeitigen Zugriff auf Daten zu visualisieren auf interaktive Art und Weise und die Lösung des Leser-Schreiber-Problems zu erleben.
-
-\section{Anforderungen}\label{anforderungen}
-% Konkrete Anforderungen ans Projekt/an die Anwendung
-Somit wird im Rahmen dieser Arbeit eine Desktop-Applikation entwickelt, womit eine Netzwerkverbindung auf Basis des Protokolls TCP aufgebaut werden kann und TCP-Pakete erhalten und versendet werden können. 
-Die Desktop-Applikation soll in ein Frontend und Backend unterteilt sein.
-Das Backend soll als Server dienen, der mit anderen Instanzen der Anwendung, also mit einem Backend einer anderen Instanz der Anwendung eine Verbindung per TCP im selben lokalen Netzwerk aufbauen kann. 
-Folgend sollen automatisch drei Arten von TCP-Paketen mit verschiedenen Intervallen ausgetauscht werden können: slow, dynamic und fast, die gezählt werden sollen innerhalb des Backend.
-Dieser Austausch wird definiert durch das automatische und gleichzeitige Senden und Empfangen der TCP-Pakete.
-Die Zählungen der Pakete sollen global in der Anwendung gespeichert und aktualisiert werden durch das Backend.
-Vor dem Versenden des TCP-Pakets soll die Art des Pakets selbstständig ausgewählt werden durch das Backend.
-Im Frontend sollen die drei Zähler der Paketarten aus dem globalen Speicher ausgelesen werden und die jeweilige Anzahl der erhaltenen Paketart soll in der UI der Anwendung visuell dargestellt werden in Form von Balken, die sich füllen.
-Damit soll das Szenario erschaffen werden, dass jeweils Frontend und Backend der Anwendungen gleichzeitig auf den globalen Speicher zugreifen und demnach das Leser-Schreiber-Problem live auftritt bzw. eine Synchronisation als Lösung im Frontend implementiert wird.
-Die Desktop-Applikation soll auf den Betriebsystemen Windows und Linux installierbar sein und auch betriebsystemübergreifend TCP-Verbindungen aufbauen können.
-Als visueller Zusatz soll ein Dark- und Lightmode eingeführt werden für die \acrshort{UI} und zwischen denen durch einen Button gewechselt werden kann.
+% TODO: Problemstellung schreiben

@@ -1,18 +1,13 @@
 \chapter*{Abstract}\label{abstract}
 \addcontentsline{toc}{chapter}{Abstract}
-In einer Welt mit stetig wachsender Vernetzung spielt die effiziente und sichere Interaktion zwischen Computern innerhalb eines Netzwerks eine zentrale Rolle. Besonders in verteilten Systemen stellen gleichzeitige Lese- und Schreibzugriffe auf gemeinsame Datenstrukturen eine Herausforderung dar, da sie leicht zu Inkonsistenzen oder Datenverlust führen können. 
 
-Um dieses sogenannte Leser-Schreiber-Problem besser zu verstehen, wird im Rahmen dieser Arbeit ein Desktop-Programm entwickelt, das die Übertragung von Paketen über das TCP-Protokoll ermöglicht zwischen zwei Instanzen im lokalen Netzwerk.
-Die Implementierung erfolgt in der Programmiersprache Go mithilfe des Frameworks Fyne für das Frontend.
-Dabei werden durch das Backend der Anwendung Pakete automatische an die andere Instanz versendet, die Anzahl der erhaltenen Pakete gezählt, lokal gespeichert und mithilfe eines Message-Channels ans Frontend gesendet. 
-Im Frontend werden die aktuellen Zähler der Pakete angezeigt und durch den gleichzeitigen Zugriff von Frontend und Backend auf den Message-Channel tritt das Leser-Schreiber-Problem auf bzw. wird dessen Lösung visualisiert.
-Somit kann es für visuell-lernende Menschen erleichtert werden dieses Problem nachzuvollziehen.
+% TODO: Abstract schreiben
 
 % Bei mehreren Autoren
 %%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Schreibverteilung}
 \begin{table}[H]
-\small	
+\small
 \begin{tabular}{| l | l |}
 \hline
 Autor   & Kapitel \\ [0.5ex]
@@ -21,6 +16,7 @@ Autor   & Kapitel \\ [0.5ex]
 Theo Leuthardt & Abstract\\
         & Einleitung\\
         & Problemstellung\\
+        & Anforderungsanalyse\\
         & Theoretische Grundlagen\\
         & Entwurf\\
         & Algorithmen\\
