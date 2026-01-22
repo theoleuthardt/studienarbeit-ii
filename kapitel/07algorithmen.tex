@@ -1,9 +1,145 @@
 \chapter{Algorithmen}\label{algorithmen}
 
-% TODO: Algorithmen schreiben (mit Referenzen zu Anforderungen)
-% Pro konkreter Codeänderung ein Unterabschnitt erstellen
+% Dieses Kapitel basiert auf der Analyse des Projektquellcodes in \texttt{source/network-interaction}.
+\section{Implementierungsübersicht}
+Die implementatorische Trennung erfolgt in eine darstellende Komponente, die eine grafische Benutzeroberfläche bereitstellt, und eine serverseitige Komponente, die die Netzwerkläufigkeit und Zustandsverwaltung verantwortet. Die Kommunikation zwischen beiden Komponenten erfolgt über einen periodisch versendeten JSON-Zustand (\texttt{QueueState}) sowie über Steuerkanäle zur Einleitung von Verbindungsversuchen.
 
-% Beispielstruktur:
-% \section{Name der konkreten Codeänderung 1}
-% \section{Name der konkreten Codeänderung 2}
-% usw.
+\section{Portreservierungsalgorithmus}
+Beim Start des Programms wird ein verfügbarer TCP-Port im Bereich \texttt{50500--50600} gesucht und für die Laufzeit reserviert. Die im Quellcode vorhandene Funktion \texttt{FindAvailablePort(startPort, endPort)} prüft die Ports linear (aufsteigend) und versucht für jeden Port, einen Listener zu binden. Der erste Port, bei dem das Binden gelingt, wird als verfügbar erkannt und seine Portnummer zurückgegeben; dieser Port wird vom Programm als eigener Laufzeitport verwendet.
+
+\begin{lstlisting}[style=golang, caption={Portreservierung (Code wie im Repository)}]
+func FindAvailablePort(startPort, endPort int) int {
+	for port := startPort; port < endPort; port++ {
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err == nil {
+			listener.Close()
+			return port
+		}
+	}
+	return endPort
+}
+\end{lstlisting}
+
+\section{Discovery-Protokoll}
+Die Peer-Erkennung basiert auf einem aktiven Scan über einen vordefinierten Portbereich (Standard: 50500--50600). Für jeden Port werden Prüfungen sowohl lokal (loopback) als auch im /24-Subnetz durchgeführt. Die zentrale Prüfroutine ist in \texttt{utils.IsPeerDiscoverable} implementiert und folgt dem Ablauf: Aufbau einer kurzlebigen TCP-Verbindung mit zeitlicher Begrenzung (Timeout), Senden einer kurzen Anwendungsschicht-Nachricht \texttt{DISCOVER\_SYN} und Auswertung der erwarteten Antwort \texttt{DISCOVER\_ACK}. Dieser Anwendungsschicht-Handshake wurde gewählt, weil er die Verlässlichkeit der Erkennung erhöht (die Antwort \texttt{DISCOVER\_ACK} bestätigt explizit die Präsenz der erwarteten Anwendung und reduziert damit Fehlalarme), weil durch kurze Schreib-/Leseoperationen mit restriktiven Timeouts eine effiziente Validierung möglich ist, bevor aufwendigere oder ressourcenintensive Maßnahmen ausgelöst werden, und weil in Netzwerken mit Paketfiltern oder NAT application-layer-Anfragen verlässlichere Aussagen über die Erreichbarkeit der gewünschten Anwendung erlauben.
+
+Die folgende Abbildung \ref{fig:discover-flow} veranschaulicht den schematischen Ablauf der Prüfroutine.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[node distance=12mm, every node/.style={font=\small}, align=center]
+  \tikzstyle{startstop} = [rectangle, rounded corners, draw=black!60, fill=black!5, text width=38mm, text centered, minimum height=6mm]
+  \tikzstyle{process} = [rectangle, draw=black!60, fill=black!10, text width=40mm, text centered, minimum height=6mm]
+  \tikzstyle{decision} = [diamond, aspect=2, draw=black!60, fill=black!5, text width=26mm, text centered, inner sep=1pt]
+  \tikzstyle{arrow} = [-{Stealth[length=3mm,width=2mm]}, thick]
+
+  \node[startstop] (start) {Start};
+  \node[process, below=of start] (dial) {TCP-Verbindung mit \texttt{DialTimeout}};
+  \node[process, below=of dial] (send) {Sende \texttt{DISCOVER\_SYN}};
+  \node[process, below=of send] (read) {Warte auf Antwort};
+  \node[decision, below=of read] (check) {Antwort \texttt{DISCOVER\_ACK}?};
+  \node[startstop, below=of check] (add) {Peer speichern};
+  \node[startstop, right=of check, xshift=12mm] (discard) {Ignorieren};
+
+  \draw[arrow] (start) -- (dial);
+  \draw[arrow] (dial) -- (send);
+  \draw[arrow] (send) -- (read);
+  \draw[arrow] (read) -- (check);
+  \draw[arrow] (check) -- node[right]{ja} (add);
+  \draw[arrow] (check) -- node[above]{nein} (discard);
+\end{tikzpicture}
+\caption{Schematischer Ablauf der Peer-Prüfung in \texttt{utils.IsPeerDiscoverable}}
+\label{fig:discover-flow}
+\end{figure}
+
+\Needspace{12\baselineskip}
+\begin{lstlisting}[style=golang, caption={Peer-Discovery (vereinfacht, sequentiell)}]
+func DiscoverPeersSimple(serverPort int, portRange []int) []string {
+	var peers []string
+	// Produktivcode parallelisiert, hier vereinfacht
+	for _, port := range portRange { 
+		if port == serverPort {
+			continue
+		}
+		addr := fmt.Sprintf("127.0.0.1:%d", port)
+		if IsPeerDiscoverable(addr) {
+			peers = append(peers, addr)
+		}
+	}
+	return peers
+}
+\end{lstlisting}
+
+\section{Verbindungsaufbau}
+Der Verbindungsaufbau erfolgt über die Nachricht \texttt{CONNECT\_REQ:ip:port}. Der Nutzer wählt einen Peer aus der zuvor ermittelten Liste (siehe Discovery-Protokoll) und sendet an diesen die Verbindungsanfrage. Nach erfolgreichem Nachrichten­austausch registrieren beide Seiten die IP-Adresse und den Port des Peers als \texttt{peerAddress} und setzen den Verbindungsstatus auf \texttt{connected = true}; damit werden weitere Verbindungsversuche unterbunden.
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Vereinfachte Behandlung der \texttt{CONNECT\_REQ}-Nachricht (Ausschnitt aus \texttt{handleConnection})}]
+if strings.HasPrefix(message, "CONNECT_REQ") {
+	if connected == true {
+		return // bereits verbunden
+	}
+
+	parts := strings.Split(message, ":") // CONNECT_REQ:ip:port
+	address := parts[1]
+	port := parts[2]
+	peerAddress = fmt.Sprintf("%s:%s", address, port)
+	connected = true
+
+	conn.Write([]byte("CONNECT_OK"))
+	utils.LogInfo("Connected to peer: " + peerAddress)
+	return
+}
+\end{lstlisting}
+
+Bei erfolgreicher Bearbeitung setzt der Server das Feld \texttt{peerAddress} und antwortet mit \texttt{CONNECT\_OK}, woraufhin der Initiator den Verbindungsstatus auf \texttt{connected} setzt und die Discovery-Phase deaktiviert wird.
+
+\section{Backend - Frontend Kommunikation}
+Die vom Backend erfassten Zustandsdaten werden mittels Go‑Kanälen an die darstellende Komponente übermittelt. Ein Go‑Channel ist ein typisierter Kommunikationskanal zwischen Goroutinen; in dieser Implementierung werden unpufferte Channels benutzt, d. h. ein Sendevorgang blockiert solange, bis ein Empfänger die Nachricht liest. Das Backend serialisiert periodisch die Struktur \texttt{QueueState} als JSON‑String und sendet diesen über den Nachrichtenkanal an das Frontend; das Frontend konsumiert die eingehenden Nachrichten, deserialisiert sie und aktualisiert die Anzeige. Steuerbefehle des Frontends (etwa ein Verbindungswunsch in Form von \texttt{IP:PORT}) werden über einen separaten Steuerkanal an das Backend übermittelt und dort verarbeitet.
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Backend: Periodisches Senden des \texttt{QueueState} (vereinfacht)}]
+func sendQueueStatePeriodically(messageChan chan string, interval time.Duration) {
+	for {
+		time.Sleep(interval)
+		state := QueueState{/* FastQueue, DynamicQueue, SlowQueue, Connected, DiscoveredPeers */}
+		data, _ := json.Marshal(state)
+		messageChan <- string(data)
+	}
+}
+\end{lstlisting}
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Frontend: Empfang und Verarbeiten der Zustandsnachrichten (vereinfacht)}]
+func messageHandler() {
+	for msg := range messageChannel {
+		var state QueueState
+		_ = json.Unmarshal([]byte(msg), &state)
+		fyne.Do(func() { updateUI(state) })
+	}
+}
+\end{lstlisting}
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Frontend: Senden eines Verbindungswunsches (vereinfacht)}]
+func sendConnectSignalToBackend(address string) {
+	signalChan <- address // IP:PORT
+}
+\end{lstlisting}
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Backend: Empfang von Steuer-Signalen (vereinfacht)}]
+go func() {
+	for data := range sgnChan {
+		if utils.TryToConnectToPeer(data, serverPort) {
+			peerAddress = data
+			connected = true
+		}
+	}
+}()
+\end{lstlisting}
+
+\section{Sicherheits- und Netzwerkeffekte}
+Das aktive Scanning erzeugt messbaren Netzwerktraffic; in restriktiven Umgebungen kann dies zu Rate-Limiting oder zu Sicherheitswarnungen führen. Die Implementierung ist daher ausschließlich für lokale Netzwerke konzipiert.
+% Ende Kapitel Algorithmen
+
