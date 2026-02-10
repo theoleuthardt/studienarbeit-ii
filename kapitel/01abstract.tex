@@ -2,8 +2,7 @@
 \addcontentsline{toc}{chapter}{Abstract}
 
 In verteilten Peer-to-Peer-Systemen stellt die manuelle Steuerung von Netzwerkverbindungen eine zentrale Herausforderung
-dar, insbesondere wenn Nutzer gezielt entscheiden sollen, mit welchen Instanzen im lokalen Netzwerk eine Verbindung
-hergestellt werden soll.
+dar.
 Während automatische Verbindungsmechanismen die Komplexität reduzieren, wird dadurch die Kontrolle über die
 Netzwerktopologie eingeschränkt.
 \\
@@ -13,17 +12,15 @@ wird im Rahmen dieser Arbeit die bestehende Go-Anwendung um ein interaktives Ver
 Während in der ursprünglichen Version Verbindungen automatisch mit dem ersten gefundenen Peer aufgebaut werden,
 wird nun eine benutzergesteuerte Verbindungsverwaltung implementiert.
 \\
-Zur Realisierung werden neue Handshake-Protokolle entwickelt, die eine gezielte Verbindungssteuerung ermöglichen.
-Im Backend wird ein Mechanismus zur automatischen Peer-Discovery im lokalen Netzwerk implementiert,
-der alle verfügbaren Instanzen erkennt und deren Status überwacht.
-Im Frontend wird eine Benutzeroberfläche entwickelt, die eine manuelle Auswahl der Verbindungspartner ermöglicht und
-den aktuellen Verbindungsstatus visualisiert.
+Für die Realisierung werden Handshake-Protokolle erschaffen auf Basis des TCP-Handshake-Protokolls.
+Das Backend wird erweitert zur automatischen Peer-Discovery im lokalen Netzwerk,
+um alle verfügbaren Instanzen zu erkennen und deren Status zu überwachen.
+Die Benutzeroberfläche im Frontend wird erweitert mit einer Visualisierung des aktuellen Verbindungsstatuses und 
+eines wweiteren Fensters zur manuellen Auswahl der Verbindungspartner.
 Zusätzlich wird ein Graceful-Disconnect-Mechanismus implementiert, der saubere Verbindungstrennungen gewährleistet.
 \\
 Durch die klare Trennung zwischen automatischer Netzwerkerkennung im Backend und manueller Verbindungsverwaltung im
 Frontend wird volle Kontrolle über Peer-to-Peer-Verbindungen in dezentralen Go-Anwendungen ermöglicht.
-Die Erweiterung wird anhand funktionaler und nichtfunktionaler Anforderungen analysiert und
-deren Implementierung dokumentiert.
 
 
 % Bei mehreren Autoren
@@ -40,12 +37,14 @@ Theo Leuthardt & Abstract\\
         & Einleitung\\
         & Problemstellung\\
         & Anforderungsanalyse\\
-        & Theoretische Grundlagen\\
-        & Entwurf\\
-        & Algorithmen\\
+        & Entwurf - Frontend\\
+        & Algorithmen - Frontend\\
+        & Fazit
 \hline
-Alexander Betke & Diskussion\\
-        & Fazit\\
+Alexander Betke & Grundlagen\\
+        & Entwurf - Backend\\
+        & Algorithmen - Backend\\
+        & Diskussion\\
 \hline
 \end{tabular}
 \end{table}
