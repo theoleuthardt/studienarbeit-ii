@@ -1,3 +1,19 @@
 \chapter{Einleitung}\label{einleitung}
-
-% TODO: Einleitung schreiben
+Verteilte Systeme bilden heutzutage das Fundament moderner Softwarearchitekturen und ermöglichen die effiziente Bearbeitung komplexer Aufgaben durch koordinierte Aufteilung auf mehrerer Instanzen.
+Durch die wachsende Größe an zu berechnenden Aufgaben solcher Softwaresysteme werden Protokolle verwendet, um Daten zwischen Bearbeitern in verteilten Systemen austauschen zu können.
+In der vorherigen Studienarbeit I wird ein System in Form einer Applikation entworfen und implementiert, womit innerhalb eines verteilten Systems wie einem lokalen Netzwerk zwei Instanzen 
+automatisch eine Verbindung herstellen und Pakete austauschen können. 
+Mithilfe dieser Applikation wird es ermöglicht das Leser-Schreiber-Problem zu visualisieren und dadurch aufkommende Wartezeiten sichbar zu machen.\\
+\\
+Mit dieser Arbeit wird die bestehende Implementierung der Applikation aus Studienarbeit I erweitert mit einem Verbindungsmanagementsystem zur manuellen Auswahl eines Verbindungspartners.
+Dabei wird eine Trennung zwischen automatischer Peer-Discovery im Backend und manueller Verbindungsauswahl im Frontend geschaffen.
+Um die das Verbindungsmanagementsystem zu realisieren, werden eigene Handshake-Protkolle und Graceful-Disconnections implementiert.
+Als Programmiersprache wird weiterhin Go eingesetzt, um auf Basis des vorhandenen Codes die praktische Umsetzung durchzuführen.\\
+\\
+Im folgenden Kapitel wird die Problemstellung erläutert zunächst eine detaillierte Analyse der Schwachstellen der bisherigen Lösung und der daraus resultierenden Anforderungen an die Erweiterung.
+Die Anforderungsanalyse strukturiert anschließend die funktionalen sowie nichtfunktionalen Kriterien, die das neue Verbindungsmanagementsystem erfüllen muss.
+Die benötigten konzeptionellen Grundlagen der Peer-Discovery-Verfahren sowie der entwickelten Handshake-Mechanismen werden im Kapitel Theoretische Grundlagen vermittelt.
+Im Entwurf werden die architektonischen Anpassungen sowohl im Backend als auch im Frontend vorgestellt, wobei der Fokus auf der Separation zwischen Netzwerkerkennung und Verbindungssteuerung liegt.
+Die praktische Umsetzung der einzelnen Komponenten wird im Kapitel Algorithmen behandelt, das ebenfalls in Frontend und Backend unterteilt wird.
+Folgend findet eine vergleichende Betrachtung der ursprünglichen und erweiterten Softwareversion statt hinsichtlich Bedienbarkeit und Funktionsumfang.
+Abchließend wird das Fazit gebildet mit einer Zusammenfassung der Erkenntnisse und einem Ausblick auf potenzielle Weiterentwicklungen.
