@@ -1,5 +1,31 @@
 \chapter{Diskussion}\label{diskussion}
 
-% TODO: Diskussion schreiben
-% Vergleich Vorher/Nachher nach der Erweiterung der Software
-% Aspekte: Nutzerfreundlichkeit, Nutzbarkeit der Software
+Die neue Implementierung ermöglicht explizite Peer-Auswahl statt adhoc-Verbindungen. Dies hat unmittelbare Folgen für die praktische Anwendbarkeit.
+
+\subsection{Alte Version: Ohne explizite Peer-Auswahl}
+
+Die Abbildung \ref{fig:showcase-old} zeigt die ursprüngliche Oberflächengestaltung. Die Anwendung konnte keine Liste erreichbarer Peers darstellen. Der Benutzer hatte keinen Überblick über, welche Instanzen im Netzwerk verfügbar waren. Eine Verbindung musste durch manuelle Eingabe der Zieladresse erfolgen oder das System stellte automatisch die erste verifizierte Verbindung her. Dies führte zu einer reaktiven Herangehensweise: Der Nutzer wartete, bis sich eine Verbindung aufbaute, konnte aber nicht aktiv zwischen mehreren Kandidaten wählen.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{bilder/SHOWCASE_old-view.png}
+\caption{Alte Version: Fehlende Peer-Discovery-Visualisierung}
+\label{fig:showcase-old}
+\end{figure}
+
+\subsection{Neue Version: Mit Peer-Auswahlliste}
+
+Abbildung \ref{fig:showcase-discovered-peers} demonstriert die neue Oberflächengestaltung. Die Anwendung zeigt nun eine Echtzeit-Liste aller im lokalen Netzwerk erkannten Peer-Instanzen. Der Nutzer sieht: Anzahl der verfügbaren Kandidaten, deren Netzwerkadressen und kann über die Buttons gezielt eine Verbindung zu einem ausgewählten Peer aufbauen. Diese proaktive Herangehensweise gibt dem Benutzer volle Kontrolle über die Verbindungsentscheidung.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.7\textwidth]{bilder/SHOWCASE_discovered-peers-list.png}
+\caption{Neue Version: Explizite Peer-Discovery-Liste mit Auswahlmöglichkeit}
+\label{fig:showcase-discovered-peers}
+\end{figure}
+
+\section{Auswirkungen der neuen Peer-Auswahl}
+
+Der Unterschied liegt in der Kontrolle. Die alte Version machte verfügbare Peers unsichtbar; eine Verbindung entstand automatisch zur ersten erkannten Instanz. Der Nutzer hatte keinen Überblick und konnte nicht wählen.
+
+Die neue Version zeigt alle erkannten Instanzen in einer Live-Liste mit ihren Netzwerkadressen. Der Benutzer sieht sofort, wie viele Kandidaten verfügbar sind, und kann gezielt auswählen, zu welcher Instanz die Verbindung aufgebaut wird. Dies ist entscheidend, wenn mehrere Instanzen der Anwendung im gleichen Netzwerk laufen (etwa weil eine versehentlich nicht geschlossen wurde oder weil mehrere Nutzer parallel aktiv sind). In der alten Variante war dies ein Problem: Das System hätte blind zur ersten Instanz verbunden, ohne dem Nutzer eine Wahl zu geben. Mit der neuen Implementierung wird die dezentrale Architektur vollständig umgesetzt. Jeder Nutzer kann bewusst mit jeder anderen Instanz kommunizieren, unabhängig davon, wie viele parallel aktiv sind. Das verdeutlicht das Kernkonzept: kein zentraler Server existiert und jeder Teilnehmer agiert gleichberechtigt.
