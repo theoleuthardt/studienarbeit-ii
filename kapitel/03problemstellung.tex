@@ -1,3 +1,38 @@
 \chapter{Problemstellung}\label{problemstellung}
+In der vorangegangenen Studienarbeit I wird eine Applikation konzipiert, bei der TCP-Verbindungen zwischen zwei Programminstanzen innerhalb eines lokalen Netzwerks vollautomatisch etabliert werden.
+Sobald eine Instanz einen Peer erkennt, wird unmittelbar eine Verbindung zu diesem hergestellt, ohne dass eine Auswahlmöglichkeit besteht.
+Diese vollständige Automatisierung führt zu drei zentralen Einschränkungen: Erstens kann nicht bestimmt werden, mit welchem Peer die Verbindung aufgebaut wird.
+Zweitens existiert keine Funktion zum manuellen Trennen einer bestehenden Verbindung.
+Drittens erhält der Anwender keinerlei Information darüber, welche weiteren Peers im Netzwerk verfügbar sind oder mit welchem konkreten Peer aktuell kommuniziert wird.\\
+\\
+Besonders problematisch zeigt sich dies in Szenarien mit mehr als zwei aktiven Instanzen.
+Befinden sich beispielsweise drei Instanzen der Anwendung im selben Netzwerk, wird automatisch mit dem zuerst entdeckten Peer verbunden, unabhängig davon, ob dies der gewünschte Kommunikationspartner ist.
+Ein Wechsel zu einer anderen Instanz wird durch die Automatisierung unterbunden, da ein manuelles Trennen nicht vorgesehen ist.
+Die einzige Möglichkeit zur Beendigung einer Verbindung besteht im vollständigen Schließen der Anwendung, wodurch sämtliche Zustandsinformationen verloren gehen.
+Zudem bietet die Benutzeroberfläche lediglich eine \acrshort{LED}-Statusanzeige, die signalisiert, ob überhaupt eine Verbindung besteht, jedoch nicht mit welchem spezifischen Peer.
 
-% TODO: Problemstellung schreiben
+\section{Problemrelevanz}\label{problemrelevanz}
+In modernen verteilten Systemen, wie sie in Cloud-Infrastrukturen, Microservice-Architekturen oder dezentralen Netzwerken zum Einsatz kommen, wird die gezielte Steuerung von Verbindungen als fundamentale Anforderung betrachtet.
+Produktivumgebungen erfordern häufig die bewusste Selektion von Kommunikationspartnern, etwa zur optimierten Lastverteilung, zur Kommunikation mit bestimmten Services oder zur Isolierung fehlerhafter Komponenten während der Fehleranalyse.
+Eine vollautomatische Verbindungssteuerung ohne Eingriffsmöglichkeiten verhindert diese Flexibilität und schränkt dadurch die praktische Anwendbarkeit erheblich ein.\\
+\\
+Aus didaktischer Perspektive wird die manuelle Kontrolle über Verbindungen als essenziell angesehen, um das Verständnis verteilter Systeme zu fördern.
+Beim Erlernen von Konzepten wie dem Leser-Schreiber-Problem sollen Studierende verschiedene Szenarien gezielt nachstellen können, indem spezifische Peers ausgewählt und Verbindungen kontrolliert getrennt werden.
+Die rein automatisierte Variante reduziert diese Lernmöglichkeiten erheblich.
+In Entwicklungs- und Testumgebungen wird zudem die Fähigkeit benötigt, zwischen verschiedenen Testinstanzen zu wechseln, ohne die Anwendung jedes Mal neu zu starten.
+Das Fehlen dieser Funktionalität erschwert iterative Entwicklungszyklen und macht wiederholtes Testen ineffizient.
+
+\section{Fehlende Funktionalitäten}\label{wasfehlt}
+Eine Analyse der bestehenden Implementierung offenbart mehrere funktionale Defizite auf Frontend- und Backend-Ebene sowie in der Architektur.
+Im Frontend wird keine Übersicht über verfügbare Peers bereitgestellt, wodurch der Anwender keine Kenntnis über potenzielle Verbindungspartner erhält.
+Eine Schaltfläche zur manuellen Verbindungstrennung existiert nicht, und es fehlt jegliche Anzeige darüber, mit welchem konkreten Peer eine Verbindung besteht.
+Diese Informationslücken verhindern eine bewusste und kontrollierte Nutzung der Anwendung.\\
+\\
+Auf Backend-Seite wird zwar kontinuierlich nach Peers gescannt durch eine Discovery-Goroutine im Portbereich 50500 bis 50600, jedoch stoppt dieser Scan-Prozess unmittelbar nach Verbindungsaufbau.
+Dadurch werden später hinzukommende Peers nicht mehr erkannt, und eine Liste verfügbarer Alternativen steht nicht zur Verfügung.
+Das implementierte Protokoll unterstützt zwar grundlegende Verbindungshandshakes mittels \texttt{CONNECT\_REQ} und \texttt{CONNECT\_OK} Nachrichten, jedoch fehlt ein vollständig koordinierter Graceful-Disconnect-Mechanismus.
+Obwohl eine \texttt{DISCONNECT} Nachricht versendet wird, erfolgt keine synchronisierte Zustandsverwaltung auf beiden Verbindungsenden, was bei unerwarteten Abbrüchen durch Netzwerkfehler oder Programmabstürze zu inkonsistenten Zuständen führen kann.\\
+\\
+Architektonisch mangelt es an einer klaren Separation zwischen automatischer Peer-Discovery und manueller Verbindungsverwaltung.
+Die aktuelle Implementierung vermischt beide Verantwortlichkeiten innerhalb derselben Goroutine, was zu enger Kopplung führt und zukünftige Erweiterungen erschwert.
+Zudem fehlen explizit definierte Zustandsübergänge für den Verbindungslebenszyklus, wodurch Randfälle wie gleichzeitige Verbindungsanfragen mehrerer Peers oder unerwartete Verbindungsabbrüche nicht konsistent behandelt werden können.

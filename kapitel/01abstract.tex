@@ -1,7 +1,27 @@
 \chapter*{Abstract}\label{abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-% TODO: Abstract schreiben
+In verteilten Peer-to-Peer-Systemen stellt die manuelle Steuerung von Netzwerkverbindungen eine zentrale Herausforderung
+dar.
+Während automatische Verbindungsmechanismen die Komplexität reduzieren, wird dadurch die Kontrolle über die
+Netzwerktopologie eingeschränkt.
+\\
+Aufbauend auf der vorangegangenen Studienarbeit I, in der eine Desktop-Anwendung zur Visualisierung des
+Leser-Schreiber-Problems entwickelt wird,
+wird im Rahmen dieser Arbeit die bestehende Go-Anwendung um ein interaktives Verbindungsmanagementsystem erweitert.
+Während in der ursprünglichen Version Verbindungen automatisch mit dem ersten gefundenen Peer aufgebaut werden,
+wird nun eine benutzergesteuerte Verbindungsverwaltung implementiert.\\
+\\
+Für die Realisierung werden Handshake-Protokolle erschaffen auf Basis des TCP-Handshake-Protokolls.
+Das Backend wird erweitert zur automatischen Peer-Discovery im lokalen Netzwerk,
+um alle verfügbaren Instanzen zu erkennen und deren Status zu überwachen.
+Die Benutzeroberfläche im Frontend wird erweitert mit einer Visualisierung des aktuellen Verbindungsstatuses und 
+eines wweiteren Fensters zur manuellen Auswahl der Verbindungspartner.
+Zusätzlich wird ein Graceful-Disconnect-Mechanismus implementiert, der saubere Verbindungstrennungen gewährleistet.\\
+\\
+Durch die klare Trennung zwischen automatischer Netzwerkerkennung im Backend und manueller Verbindungsverwaltung im
+Frontend wird volle Kontrolle über Peer-to-Peer-Verbindungen in dezentralen Go-Anwendungen ermöglicht.
+
 
 % Bei mehreren Autoren
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -18,14 +38,16 @@ Theo Leuthardt
         & Einleitung\\
         & Problemstellung\\
         & Anforderungsanalyse\\
-        & Theoretische Grundlagen\\
-        & Entwurf\\
+        & Entwurf - Frontend\\
+        & Algorithmen - Frontend\\
+        & Fazit\\
         
 \hline
 Alexander Betke
-        & Algorithmen\\
+        & Theoretische Grundlagen\\
+        & Entwurf - Frontend\\
+        & Algorithmen - Backend\\
         & Diskussion\\
-        & Fazit\\
 \hline
 \end{tabular}
 \end{table}
