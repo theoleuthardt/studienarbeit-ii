@@ -4,7 +4,11 @@
 
 \section{Strukturelle Veränderungen im Backend}\label{backend-veraenderungen}
 
-% TODO: Beschreibung der strukturellen Veränderungen im Backend
+Die wesentliche Neuerung im Backend-Entwurf ist die Einführung einer expliziten Zustandsverwaltung für Netzwerkverbindungen. Das neue Modell implementiert ein striktes State-Management und verzichtet auf den bisherigen direkten Verbindungsaufbau. Ein zentraler \texttt{PeerManager} verwaltet den Status aller externen Teilnehmer. Diese Änderung ersetzt die sofortige Session-Etablierung durch ein kontrolliertes Verfahren zur Bereitstellung von potentiellen Peers.
+
+Ein zentraler Aspekt ist die Trennung von Erkennung und Session-Management. Ein Endpunkt durchläuft mehrere Zustände, bevor ein Datenaustausch stattfindet. Zunächst identifiziert der Discovery-Scanner einen potenziellen Peer und führt diesen als Kandidaten in einer Liste. Erst die Verifikation über den anwendungsspezifischen Handshake überführt den Kandidaten in den Status eines verifizierten Peers. Kapitel \ref{algorithmen} beschreibt den genauen Nachrichtenablauf.
+
+Ein nebenläufiges Zugriffskonzept schützt die Datenintegrität bei parallelen Scans. Da der Port-Scanner hunderte Goroutinen gleichzeitig initiiert, sichern Synchronisationsprimitive den Zugriff auf die Peer-Liste ab. Das Backend gibt Zustandsänderungen asynchron über Kommunikationskanäle an das Frontend weiter. Dies stellt sicher, dass das System auch bei instabilen Netzwerkbedingungen oder einer hohen Anzahl konkurrierender Peers reaktionsfähig bleibt.
 
 \section{Strukturelle Veränderungen im Frontend}\label{frontend-veraenderungen}
 
