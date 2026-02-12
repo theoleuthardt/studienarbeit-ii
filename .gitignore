@@ -26,3 +26,6 @@
 *.swp
 *~
 /.idea/
+
+#Allow PDFs in papers directory
+!papers/*pdf

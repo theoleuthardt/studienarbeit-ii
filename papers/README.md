@@ -1,0 +1,1 @@
+I just found these papers by googleing very hard. Im pretty sure that most of these are not in the public domain or even "legally" sourced. We should NOT publish this repository with these copyrighted books and papers in them. Like ever </3

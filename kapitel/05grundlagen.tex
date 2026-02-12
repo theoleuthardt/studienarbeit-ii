@@ -1,5 +1,37 @@
 \chapter{Theoretische Grundlagen}\label{grundlagen}
 
-% TODO: Theoretische Grundlagen schreiben
-% Erklärung aller notwendigen Prinzipien für die Entwicklung der Erweiterung
-% z.B. tiefere theoretische Erklärung des Findens von anderen Instanzen im lokalen Netzwerk
+\section{Peer-Discovery in lokalen Netzwerken}\label{grundlagen-discovery}
+
+Damit zwei Instanzen einer dezentralen Anwendung miteinander kommunizieren können, müssen sie sich zunächst gegenseitig finden. In zentralisierten Architekturen übernimmt ein bekannter Server diese Vermittlung; beide Teilnehmer kennen seine Adresse und registrieren sich dort. In dezentralen Systemen existiert eine solche zentrale Instanz nicht.\cite{Bengel_2014} %Ich bin mir sicher das steht da drinen aber ich habe das Buch gerade nicht zur Hand um die Seitenzahl zu zitieren!
+
+Für die Erkennung von Peers im lokalen Netzwerk existieren grundsätzlich zwei Ansätze: passive und aktive Discovery. Bei passiver Discovery annoncieren Teilnehmer ihre Präsenz über Broadcast- oder Multicast-Nachrichten (z.\,B. mDNS, SSDP). Jeder Teilnehmer lauscht auf einem vereinbarten Port und reagiert auf eingehende Ankündigungen. Bei aktiver Discovery hingegen durchsucht ein Teilnehmer das Netzwerk gezielt nach anderen Instanzen, indem er definierte Adressen und Ports systematisch kontaktiert.\cite[vgl. S. 69\,ff.]{Zisler_2012}
+
+Beide Verfahren haben Implikationen: Passive Discovery erzeugt periodischen Broadcast-Traffic, wird aber von manchen Netzwerkkonfigurationen unterdrückt. Aktive Discovery erzeugt gezielten, aber potenziell umfangreichen Unicast-Traffic, funktioniert jedoch unabhängig von Broadcast-Fähigkeiten des Netzwerks.
+
+Die in dieser Arbeit entwickelte Lösung verwendet aktive Discovery. Der Grund liegt in der Zielumgebung: In einem /24-Subnetz mit bekanntem Portbereich ist die Anzahl der zu prüfenden Endpunkte überschaubar (maximal $254 \times n_{\text{Ports}}$ Kombinationen), und die Prüfung lässt sich durch \gls{glos:nebenläufigkeit} parallelisieren, sodass der Scanvorgang in akzeptabler Zeit abgeschlossen wird.\cite[vgl. S. 84\,ff.]{Zisler_2012}
+
+\section{Anwendungsschicht-Handshake als Endpunktvalidierung}\label{grundlagen-handshake}
+
+Ein offener TCP-Port allein ist kein hinreichendes Kriterium dafür, dass hinter diesem Port tatsächlich die gesuchte Anwendung läuft. Auf dem gleichen Portbereich können beliebige andere Dienste aktiv sein. Eine reine Verbindbarkeit auf Transportebene (also das erfolgreiche Durchlaufen des TCP-Dreiwege-Handshakes) beweist lediglich, dass ein Prozess den Port gebunden hat und Verbindungen annimmt.\cite[vgl. S. 294\,ff.]{Maurer_2019}
+
+Um die Identität des Gegenübers auf Anwendungsebene sicherzustellen, wird in dieser Arbeit ein eigens entworfener Handshake auf der Anwendungsschicht eingesetzt. Das Prinzip ist bewusst einfach gehalten:
+
+\begin{enumerate}
+    \item Der anfragende Peer öffnet eine kurzlebige TCP-Verbindung zum Ziel.
+    \item Er sendet eine definierte Kennung (\texttt{DISCOVER\_SYN}).
+    \item Nur eine Instanz der eigenen Anwendung erkennt diese Kennung und antwortet mit \texttt{DISCOVER\_ACK}.
+    \item Jede andere Antwort oder ein Timeout führt zum Verwerfen des Kandidaten.
+\end{enumerate}
+
+Dieser Mechanismus ähnelt strukturell dem TCP-Dreiwege-Handshake (SYN $\rightarrow$ SYN-ACK $\rightarrow$ ACK), unterscheidet sich aber in wesentlichen Punkten. Der TCP-Handshake operiert auf Schicht 4 des OSI-Modells und dient der Synchronisation von Sequenznummern sowie dem Aushandeln von Verbindungsparametern zwischen zwei Transportendpunkten.\cite[vgl. S. 21\,ff.]{Zisler_2012} Der hier beschriebene Handshake hingegen operiert auf der Anwendungsschicht (Schicht 7) und verfolgt ein anderes Ziel: Er validiert nicht die Transportverbindung, sondern die \textit{semantische Identität} des Endpunkts. Die Frage ist nicht ,,Kann ich diesen Port erreichen?'', sondern ,,Läuft dort meine Anwendung?''.
+
+Durch die Kombination beider Handshakes (TCP auf Transportebene und anwendungsspezifisch auf Applikationsebene) ergibt sich eine zweistufige Validierung. Die erste Stufe stellt die Erreichbarkeit sicher, die zweite die Zugehörigkeit zur erwarteten Anwendung. Fehlalarme, bei denen ein fremder Dienst fälschlich als Peer erkannt wird, werden damit praktisch ausgeschlossen.
+
+\section{Nebenläufigkeit im Kontext der Netzwerkkommunikation}\label{grundlagen-nebenlaeufigkeit}
+
+Die sequentielle Prüfung aller Adress-Port-Kombinationen im Subnetz wäre bei restriktiven Timeouts zwar korrekt, aber langsam. Wenn pro Verbindungsversuch ein Timeout von beispielsweise 200\,ms angesetzt wird, ergeben sich bei $254 \times 100$ Kombinationen rund 85 Minuten Scanzeit; das ist offensichtlich nicht praxistauglich.
+
+Die Lösung liegt in der nebenläufigen Ausführung der Prüfungen. Nebenläufigkeit bedeutet, dass mehrere Abläufe unabhängig voneinander bearbeitet werden können.\cite[vgl. S. 3\,ff]{Maurer_2019} Ob sie tatsächlich gleichzeitig (parallel) oder durch Zeitscheiben verschränkt ausgeführt werden, hängt von der verfügbaren Hardware ab; dies ist jedoch für die Korrektheit des Verfahrens unerheblich.
+
+Go unterstützt Nebenläufigkeit als Sprachkonzept durch Goroutinen und Channels.\cite[vgl. S. 54\,ff.]{Maurer_2019} Goroutinen sind leichtgewichtige Ausführungseinheiten, die vom Go-Laufzeitsystem auf Betriebssystem-Threads verteilt werden. Channels ermöglichen die typsichere Kommunikation zwischen Goroutinen ohne explizite Sperrmechanismen. Für den Discovery-Prozess bedeutet das: Jede Adress-Port-Kombination kann als eigenständige Goroutine geprüft werden, und die Ergebnisse werden über einen Channel gesammelt. Die effektive Scanzeit reduziert sich damit auf die Dauer des langsamsten Einzelversuchs plus Verwaltungsaufwand, statt auf die Summe aller Einzelversuche.
+
