@@ -1,19 +1,18 @@
 \chapter{Einleitung}\label{einleitung}
-Verteilte Systeme bilden heutzutage das Fundament moderner Softwarearchitekturen und ermöglichen die effiziente Bearbeitung komplexer Aufgaben durch koordinierte Aufteilung auf mehrerer Instanzen.
-Durch die wachsende Größe an zu berechnenden Aufgaben solcher Softwaresysteme werden Protokolle verwendet, um Daten zwischen Bearbeitern in verteilten Systemen austauschen zu können.
-In der vorherigen Studienarbeit I wird ein System in Form einer Applikation entworfen und implementiert, womit innerhalb eines verteilten Systems wie einem lokalen Netzwerk zwei Instanzen 
-automatisch eine Verbindung herstellen und Pakete austauschen können. 
-Mithilfe dieser Applikation wird es ermöglicht das Leser-Schreiber-Problem zu visualisieren und dadurch aufkommende Wartezeiten sichbar zu machen.\\
+
+Verteilte Systeme ermöglichen die effiziente Bearbeitung komplexer Aufgaben durch eine potentiell effiziente Aufteilung auf mehrere bearbeitende Instanzen.
+Bei zunehmender Komplexität solcher Aufgaben werden Protokolle benötigt, um einen sicheren Datenaustausch zwischen den einzelnen Bearbeitern zu gewährleisten.
+Um die Aufteilung von Aufgaben auf Teilnehmer verteilter Systeme zu erforschen und das Leser-/Schreiber-Problem zu visualisieren wird in der vergangenen Studienarbeit I 
+eine Applikation in Go entwickelt, mit der zwei Instanzen dieser Anwendung in einem lokalen Netzwerk eine Verbindung aufbauen können per TCP-Protokoll und anschließend Pakete gegenseitig aneinander versendet werden.
 \\
-Mit dieser Arbeit wird die bestehende Implementierung der Applikation aus Studienarbeit I erweitert mit einem Verbindungsmanagementsystem zur manuellen Auswahl eines Verbindungspartners.
-Dabei wird eine Trennung zwischen automatischer Peer-Discovery im Backend und manueller Verbindungsauswahl im Frontend geschaffen.
-Um die das Verbindungsmanagementsystem zu realisieren, werden eigene Handshake-Protkolle und Graceful-Disconnections implementiert.
-Als Programmiersprache wird weiterhin Go eingesetzt, um auf Basis des vorhandenen Codes die praktische Umsetzung durchzuführen.\\
+Mit dieser Arbeit wird die bestehende Implementierung erweitert um ein Verbindungsmanagementsystem.
+Dieses soll dem Nutzer die Möglichkeit geben selbst die Instanz auszuwählen, mit der sich die Anwendung verbinden soll.
+Für die Erweiterung wird im Frontend eine Übersicht aktuell vorhandener und verbindungsbereiter Instanzen entwickelt zum interaktiven Aussuchen des Verbindungspartners.
+Dafür wird auf Basis des TCP-Handshake-Protokolls ein eigenes Handshake-Protokoll entworfen und für saubere Verbindungstrennungen Graceful-Disconnections implementiert.
+Da dies eine Erweiterung des vorhandenen Prgrammcodes ist, wird die Programmiersprache GoLang für das Frontend und Backend beibehalten.
 \\
-Im folgenden Kapitel wird die Problemstellung erläutert zunächst eine detaillierte Analyse der Schwachstellen der bisherigen Lösung und der daraus resultierenden Anforderungen an die Erweiterung.
-Die Anforderungsanalyse strukturiert anschließend die funktionalen sowie nichtfunktionalen Kriterien, die das neue Verbindungsmanagementsystem erfüllen muss.
-Die benötigten konzeptionellen Grundlagen der Peer-Discovery-Verfahren sowie der entwickelten Handshake-Mechanismen werden im Kapitel Theoretische Grundlagen vermittelt.
-Im Entwurf werden die architektonischen Anpassungen sowohl im Backend als auch im Frontend vorgestellt, wobei der Fokus auf der Separation zwischen Netzwerkerkennung und Verbindungssteuerung liegt.
-Die praktische Umsetzung der einzelnen Komponenten wird im Kapitel Algorithmen behandelt, das ebenfalls in Frontend und Backend unterteilt wird.
-Folgend findet eine vergleichende Betrachtung der ursprünglichen und erweiterten Softwareversion statt hinsichtlich Bedienbarkeit und Funktionsumfang.
-Abchließend wird das Fazit gebildet mit einer Zusammenfassung der Erkenntnisse und einem Ausblick auf potenzielle Weiterentwicklungen.
+Im fogenden Kapitel werden mit der \ref{problemstellung} die noch vorhandenen Probleme aus Studienarbeit 1, die Problemrelevanz und noch fehlende Funktionalitäten beschrieben.
+Die daran anschließende Anforderungsanalyse konkretisiert die funktionalen und nicht funktionalen Anforderungen, die sich daraus ergeben.
+Für das Verständis der späteren Kapitel wie dem \ref{entwurf} zu architektonischen Anpassungen oder \ref{algorithmen} mit den konkreten Implementierungen wird im Kapitel \ref{grundlagen} jegliche konzeptionelle Grundlage erläutert.
+Mit der \ref{diskussion} werden die Ergebnisse des Projekts evaluiert und von einem kritischen Standpunkt betrachtet.
+Abschließend wird in Kapitel \ref{fazit} ein Fazit gezogen und zukünftige mögliche Änderungen bzw. Verbesserungen angeführt.
