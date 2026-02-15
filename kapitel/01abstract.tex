@@ -1,27 +1,24 @@
 \chapter*{Abstract}\label{abstract}
 \addcontentsline{toc}{chapter}{Abstract}
 
-In verteilten Peer-to-Peer-Systemen stellt die manuelle Steuerung von Netzwerkverbindungen eine zentrale Herausforderung
-dar.
-Während automatische Verbindungsmechanismen die Komplexität reduzieren, wird dadurch die Kontrolle über die
-Netzwerktopologie eingeschränkt.
+In heutigen verteilten Systemen stellt die benutzerorientierte Herstellung einer Netzwerkverbindung eine 
+zunehmende Komplexität dar.
+Automatisierungen hinsichtlich des Verbindungsaufbaus reduzieren diese Komplexität erheblich, jedoch wird damit 
+auch ein Teil der Kontrolle über die Netzwerktopologie abgegeben.\\
 \\
-Aufbauend auf der vorangegangenen Studienarbeit I, in der eine Desktop-Anwendung zur Visualisierung des
-Leser-Schreiber-Problems entwickelt wird,
-wird im Rahmen dieser Arbeit die bestehende Go-Anwendung um ein interaktives Verbindungsmanagementsystem erweitert.
-Während in der ursprünglichen Version Verbindungen automatisch mit dem ersten gefundenen Peer aufgebaut werden,
-wird nun eine benutzergesteuerte Verbindungsverwaltung implementiert.\\
+Die in Studienarbeit I entwickelte Desktop-Anwendung mit der Programmiersprache Go zur Visualiserung des Leser-/Schreiber-Problems wird
+im Rahmen dieser Arbeit um ein Interaktives Verbindungsmanagementsystem erweitert.
+In der vorherigen Version der Desktop-Applikation werden andere Instanzen der Anwendung im lokalen Netzwerk gesucht und es wird eine
+Verbindung mit der erst möglichen Instanz automatisch hergestellt.
+Mit der Erweiterung im Zuge dieses Projekts wird dem Benutzer ermöglicht selbst eine beliebige Instanz im lokalen Netzwerk auszuwählen
+und eine Verbindung aufzubauen.\\
 \\
-Für die Realisierung werden Handshake-Protokolle erschaffen auf Basis des TCP-Handshake-Protokolls.
-Das Backend wird erweitert zur automatischen Peer-Discovery im lokalen Netzwerk,
-um alle verfügbaren Instanzen zu erkennen und deren Status zu überwachen.
-Die Benutzeroberfläche im Frontend wird erweitert mit einer Visualisierung des aktuellen Verbindungsstatuses und 
-eines wweiteren Fensters zur manuellen Auswahl der Verbindungspartner.
-Zusätzlich wird ein Graceful-Disconnect-Mechanismus implementiert, der saubere Verbindungstrennungen gewährleistet.\\
+Zur Umsetzung dieser Erweiterung werden eigen entwickelte TCP-Handshake-Protokolle entwickelt auf Basis des TCP-Handshake-Protokolls.
+Das Backend wird mit jenen Protokollen zur Discovery anderer Peers ergänzt inklusive neuen Implementierungen für den Verbindungsaufbau.
+Zur Anzeige aller aktuell verbindungsbereiten Peers im lokalen Netzwerk wird dem Frontend eine Übersicht hinzugefügt, mit der der Benutzer
+einen Peer zum Verbindungsaufbau auswählen kann.
+Für die saubere Trennung einer bestehenden Verbindung werden im Backend Graceful Disconnections implementiert.\\
 \\
-Durch die klare Trennung zwischen automatischer Netzwerkerkennung im Backend und manueller Verbindungsverwaltung im
-Frontend wird volle Kontrolle über Peer-to-Peer-Verbindungen in dezentralen Go-Anwendungen ermöglicht.
-
 
 % Bei mehreren Autoren
 %%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,3 +1,19 @@
 \chapter{Fazit}\label{fazit}
-
-% TODO: Fazit schreiben
+Im Rahmen dieser Studienarbeit II wird die in Studienarbeit I entwickelte Desktop-Anwendung erfolgreich erweitert um ein interaktives Verbindungsmanagementsystem.
+Mithilfe der implementierten Erweiterungen wird es Nutzern der Anwendung ermöglicht, manuell einen Verbindungspartner aus einer visuell veranschaulichten Liste von anderen verfügbaren Peers im lokalen Netzwerk auswählen zu können.
+Von der Entwicklung werden sowohl strukturelle Anpassungen im Backend als auch die Erweiterung des Frontends um ein dynamisches Peer-Auswahlsystem abgedeckt.\\
+\\
+Die funktionalen und nicht-funktionalen Anforderungen aus Kapitel \ref{anforderungsanalyse} werden durch die Implementierung vollständig umgesetzt.
+Im Backend wird eine kontinuierliche Peer-Discovery im nicht verbundenen Zustand (FA-01 & FA-02) implementiert und im Frontend eine Übersicht zur Visualiserung verbindungsbereiter Peers in Form eines Grids mit Buttons (FA-04, FA-04, NFA-08).
+Durch die zusätzlichen Implementierungen im Backend, wie die Umsetzung des Verbindungs-Handshake-Protokolls (FA-05), den bidirektionalen Informationsaustausch (FA-06) und die Verbindungsexklusivität (FA-07), wird eine Verbindungsverwaltung innerhalb der Anwendung erschaffen.
+Zur manuellen Verbindungstrennung wird über die Umsetzung manueller Disconnects durch einen Button im Frontend (FA-08), Graceful Disconnects (FA-09) und eine Zustandssynchronisation bei Disconnects (FA-10) ermöglicht.
+Darüber hinaus werden sowohl im Frontend als auch im Backend der Anwendung nicht funktionale Anforderungen umgesetzt hinsichtlich der Performance (NFA-01 bis NFA-03), Benutzerfreundlichkeit (NFA-04 & NFA-05), Zuverlässigkeit (NFA-06) und Skalierbarkeit (NFA-08).\\
+\\
+Für zukünftige Erweiterungen des Projekts bestehen verschiedene Möglichkeiten.
+Eine kontinuierliche Peer-Discovery auch während bestehender Verbindungen würde es ermöglichen, ohne Trennung der aktuellen Verbindung bereits nach potenziellen neuen Verbindungspartnern zu suchen.
+Die Implementierung eines Verbindungsverlaufs könnte dem Nutzer Einblick in vergangene Verbindungen geben.
+Zusätzlich könnte ein Mechanismus zur Priorisierung bevorzugter Peers implementiert werden, etwa durch das Speichern häufig genutzter Verbindungen.
+Eine weitere sinnvolle Erweiterung wäre die Unterstützung mehrerer gleichzeitiger Verbindungen, wobei die aktuelle Exklusivität (eine Verbindung pro Instanz) aufgehoben werden müsste.\\
+\\
+Durch die Fertigstellung dieser Arbeit wurde die ursprüngliche Anwendung um wesentliche Funktionalitäten erweitert, die die Nutzerfreundlichkeit und Kontrolle über Netzwerkverbindungen deutlich verbessern.
+Die klare Architektur mit Trennung zwischen automatischer Erkennung und manueller Steuerung schafft die Grundlage für weitere Entwicklungen im Bereich dezentraler Peer-to-Peer-Anwendungen.

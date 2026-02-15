@@ -1,38 +1,37 @@
 \chapter{Problemstellung}\label{problemstellung}
-In der vorangegangenen Studienarbeit I wird eine Applikation konzipiert, bei der TCP-Verbindungen zwischen zwei Programminstanzen innerhalb eines lokalen Netzwerks vollautomatisch etabliert werden.
-Sobald eine Instanz einen Peer erkennt, wird unmittelbar eine Verbindung zu diesem hergestellt, ohne dass eine Auswahlmöglichkeit besteht.
-Diese vollständige Automatisierung führt zu drei zentralen Einschränkungen: Erstens kann nicht bestimmt werden, mit welchem Peer die Verbindung aufgebaut wird.
-Zweitens existiert keine Funktion zum manuellen Trennen einer bestehenden Verbindung.
-Drittens erhält der Anwender keinerlei Information darüber, welche weiteren Peers im Netzwerk verfügbar sind oder mit welchem konkreten Peer aktuell kommuniziert wird.\\
+Das mit der Studienarbeit I implementierte Softwaresystem in Form einer Desktop-Anwendung ermöglicht es TCP-Verbindungen zwischen zwei Instanzen innerhalb eines lokalen Netzwerks vollautomatisch herzustellen.
+Erkennt das Backend einer Instanz eine andere wird direkt eine Verbindungsanfrage gesendet.
+Die Automatisierung dieses Prozesses führt zu den drei folgenden Beschränkungen:
+
+\begin{enumerate}
+    \item Es kann nicht bestimmt werden, mit welchem Peer die Verbindung aufgebaut wird.
+    \item Es existiert keine Funktion zum manuellen Trennen einer bestehenden Verbindung.
+    \item Der Anwender erhält keinerlei Information darüber, welche weiteren Peers im Netzwerk verfügbar sind oder mit welchem konkreten Peer aktuell kommuniziert wird.
+\end{enumerate}
+
 \\
-Besonders problematisch zeigt sich dies in Szenarien mit mehr als zwei aktiven Instanzen.
-Befinden sich beispielsweise drei Instanzen der Anwendung im selben Netzwerk, wird automatisch mit dem zuerst entdeckten Peer verbunden, unabhängig davon, ob dies der gewünschte Kommunikationspartner ist.
-Ein Wechsel zu einer anderen Instanz wird durch die Automatisierung unterbunden, da ein manuelles Trennen nicht vorgesehen ist.
-Die einzige Möglichkeit zur Beendigung einer Verbindung besteht im vollständigen Schließen der Anwendung, wodurch sämtliche Zustandsinformationen verloren gehen.
-Zudem bietet die Benutzeroberfläche lediglich eine \acrshort{LED}-Statusanzeige, die signalisiert, ob überhaupt eine Verbindung besteht, jedoch nicht mit welchem spezifischen Peer.
+Falls mehr als zwei Instanzen in einem lokalen Netzwerk ausgeführt werden, ist es mehr Zufall als gewolltes Szenario der Benutzer welche Instanz
+mit welcher anderen eine Verbindung eingeht.
+In der Regel sendet eine Instanz bei beispielsweise drei Instanzen in einem lokalen Netzwerk an eine zweite eine Verbindungsanfrage und verbindet sich mit dieser unabhängig davon,
+ob dies vom Nutzer so gewollt ist.
+Zum Wechseln des Peers mit dem die Verbindung eingegangen werden soll muss die eigene Instanz vollständig beendet werden.
+Nur so ist es bisher möglich die Verbindung zu trennen.\\
 
 \section{Problemrelevanz}\label{problemrelevanz}
-In modernen verteilten Systemen, wie sie in Cloud-Infrastrukturen, Microservice-Architekturen oder dezentralen Netzwerken zum Einsatz kommen, wird die gezielte Steuerung von Verbindungen als fundamentale Anforderung betrachtet.
-Produktivumgebungen erfordern häufig die bewusste Selektion von Kommunikationspartnern, etwa zur optimierten Lastverteilung, zur Kommunikation mit bestimmten Services oder zur Isolierung fehlerhafter Komponenten während der Fehleranalyse.
-Eine vollautomatische Verbindungssteuerung ohne Eingriffsmöglichkeiten verhindert diese Flexibilität und schränkt dadurch die praktische Anwendbarkeit erheblich ein.\\
-\\
-Aus didaktischer Perspektive wird die manuelle Kontrolle über Verbindungen als essenziell angesehen, um das Verständnis verteilter Systeme zu fördern.
-Beim Erlernen von Konzepten wie dem Leser-Schreiber-Problem sollen Studierende verschiedene Szenarien gezielt nachstellen können, indem spezifische Peers ausgewählt und Verbindungen kontrolliert getrennt werden.
-Die rein automatisierte Variante reduziert diese Lernmöglichkeiten erheblich.
-In Entwicklungs- und Testumgebungen wird zudem die Fähigkeit benötigt, zwischen verschiedenen Testinstanzen zu wechseln, ohne die Anwendung jedes Mal neu zu starten.
-Das Fehlen dieser Funktionalität erschwert iterative Entwicklungszyklen und macht wiederholtes Testen ineffizient.
+Die manuelle Verbindungssteuerung wird in modernen verteilten Systemen wie Microservices oder verteilten Netzwerken über mehrere Rechenzentren als essentiell angesehen.
+In manchen Szenarien solcher Produktivsysteme wird die bewusste Auswahl des Verbindungspartners erfordert für das Trouble-Shooting fehlerhafter Teilkomponenten oder die Kommunikation mit eindeutigen Services.\\
+Im Falle der Visualisierung des Leser-/Schreiber-Problems zum Erlernen für Studierende ist es notwendig verschiedene Szenarien durcharbeiten zu können zum besseren Verständnis des Problems, wodurch das spezifische Auswählen des Kommunikationspartners benötigt wird.
+Wird ein Anwendungsbeispiel wie die Verbindung mit Testinstanzen für eine Entwicklungs- bzw. Testumgebung betrachtet, wird die zu aufwendende Zeit für das Testen durch das wiederholte Neustarten der Anwendung erhöht, wodurch ein ineffizienterer Testablauf verursacht werden kann.
 
 \section{Fehlende Funktionalitäten}\label{wasfehlt}
-Eine Analyse der bestehenden Implementierung offenbart mehrere funktionale Defizite auf Frontend- und Backend-Ebene sowie in der Architektur.
-Im Frontend wird keine Übersicht über verfügbare Peers bereitgestellt, wodurch der Anwender keine Kenntnis über potenzielle Verbindungspartner erhält.
-Eine Schaltfläche zur manuellen Verbindungstrennung existiert nicht, und es fehlt jegliche Anzeige darüber, mit welchem konkreten Peer eine Verbindung besteht.
-Diese Informationslücken verhindern eine bewusste und kontrollierte Nutzung der Anwendung.\\
+Nach einer Analyse der bestehenden Implementierung der Desktop-Anwendung werden sowohl funktionale als architektonische Defizite in der Frontend- und Backend-Schicht ersichtlich.
+Architektonisch wird eine Diskrepanz erkannt zwischen dem Informationsgehalt im Backend über die gefundenen Peers im Backend durch automatische Peer-Discovery und die fehlenden Informationen darüber im Frontend für eine Übersicht des möglichen Verbindungspartner.\\
 \\
-Auf Backend-Seite wird zwar kontinuierlich nach Peers gescannt durch eine Discovery-Goroutine im Portbereich 50500 bis 50600, jedoch stoppt dieser Scan-Prozess unmittelbar nach Verbindungsaufbau.
-Dadurch werden später hinzukommende Peers nicht mehr erkannt, und eine Liste verfügbarer Alternativen steht nicht zur Verfügung.
-Das implementierte Protokoll unterstützt zwar grundlegende Verbindungshandshakes mittels \texttt{CONNECT\_REQ} und \texttt{CONNECT\_OK} Nachrichten, jedoch fehlt ein vollständig koordinierter Graceful-Disconnect-Mechanismus.
-Obwohl eine \texttt{DISCONNECT} Nachricht versendet wird, erfolgt keine synchronisierte Zustandsverwaltung auf beiden Verbindungsenden, was bei unerwarteten Abbrüchen durch Netzwerkfehler oder Programmabstürze zu inkonsistenten Zuständen führen kann.\\
+In der Backend-Schicht der Implementierung wird automatisch nach anderen Peers im lokalen Netzwerk gesucht mit den Ports 50500 bis 50600.
+Nach einer erfolgreichen Verbindung mit einem anderen Peer, wird aber der Scan-Algorithmus beendet und erst wenn die Anwendung neu gestartet wird, wird erst wieder nach neuen Peers gesucht.
+Sollte also ein Peer nicht auch schon verbindungsbereit im selben Netzwerk vorhanden sein, kann eine Verbindung erst nach einem Anwendungsneustart hergestellt werden.
+Außerdem werden durch das Backend zwar bei der Verbindungstrennung die grundlegenden Handshakes unterstützt durch \texttt{CONNECT\_REQ} und \texttt{CONNECT\_OK} Nachrichten, jedoch wird keine Implementierung bereitgestellt für Graceful-Disconnects zur vollständig koordinierten Verbindungstrennung.\\
 \\
-Architektonisch mangelt es an einer klaren Separation zwischen automatischer Peer-Discovery und manueller Verbindungsverwaltung.
-Die aktuelle Implementierung vermischt beide Verantwortlichkeiten innerhalb derselben Goroutine, was zu enger Kopplung führt und zukünftige Erweiterungen erschwert.
-Zudem fehlen explizit definierte Zustandsübergänge für den Verbindungslebenszyklus, wodurch Randfälle wie gleichzeitige Verbindungsanfragen mehrerer Peers oder unerwartete Verbindungsabbrüche nicht konsistent behandelt werden können.
+Zusätzlich wird dem Nutzer im Frontend nicht ersichtlich gemacht, welche anderen Peers gerade zur aktuellen Laufzeit verbindungsbereit vorhanden sind.
+Ebenfalls wird keine Benutzerinteraktionsmöglichkeit angezeigt wie eine Schaltfläche zum manuellen Trennen einer aktuell vorhandenen Verbindung.
+Durch diese beiden fehlenden Funktionalitäten wird eine Informationslücke für einen kontrollierten Anwendungsablauf dargestellt.

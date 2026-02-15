@@ -1,9 +1,88 @@
-\chapter{Anforderungsanalyse}
+\chapter{Anforderungsanalyse}\label{anforderungsanalyse}
+Mit der Erweiterung der vorhanden Implementierung aus Studienarbeit I werden Definitionen von Anforderungen gefordert.
+Damit wird eine Grundlage gebildet, auf der der Entwurf und die Implementierung des Verbindungsmanagementsystems umgesetzt werden kann.
+Es wird als notwendig betrachtet, dass alle Grundfunktionalitäten aus der Studienarbeit I beibehalten werden.
+Dazu wird auf funktionaler Seite das automatische Erkennen von Peers im lokalen Netzwerk gezählt, sowie die Nutzung des Portbereichs 50500 bis 50600, das gegenseitige Versenden von TCP-Paketen, die Anzeige und das Monitoring des aktuellen Verbindungsstatuses, die Visualiserung des Leser-/Schreiber-Problems und die Channel-basierte Kommunikation zwischen Frontend und Backend.
+Bei den nicht funktionales Anforderungen werden die Plattformunabhängigkeit der Anwendung, UI-Skalierung und der Dark-Mode als vorhanden gesehen.\\
+In den folgenden Teilabschnitten werden die Anforderungen in funktionale und nicht funktionale unterteilt und darin jeweils in kategorisierte Untergruppen.
+Jede definierte Anforderung wird mit einer eindeutigen Indentifikationsnummer notiert für die spätere Referenzierung in Kapitel \ref{entwurf} und \ref{algorithmen}.
 
-\section{Funktionale Anforderungen}
+\section{Funktionale Anforderungen}\label{funktionale_anforderungen}
+In folgender Auflistung werden die neuen funktionalen Anforderungen beschrieben für das erwartete Verhalten der Desktop-Anwendung.
 
-% TODO: Beschreibung der funktionalen Anforderungen
+\subsection{Peer-Discovery}
+\begin{description}
+    \item[FA-01: Peer-Liste-Verwaltung] \hfill \label{FA-01} \\
+    Zusätzlich zur automatischen Erkennung von Peers im lokalen Netzwerk soll das Backend eine Liste an erkannten Peers führen und diese regelmäßig bei jeder neuen Suche aktualisieren.
 
-\section{Nichtfunktionale Anforderungen}
+    \item[FA-02: Discovery-Handshake] \hfill \label{FA-02} \\
+    Damit auch nur valide Peers erkannt werden, soll vor dem eigentlichen Verbindungs-Handshake eine Erkennungs-Handshake implementiert werden in Form von: \texttt{DISCOVER\_SYN} / \texttt{DISCOVER\_ACK}.
+    Dies soll zur Prüfung dienen, ob der gefundene Peer verfügbar für eine anschließende Verbindung ist.
+\end{description}
 
-% TODO: Beschreibung der nichtfunktionalen Anforderungen
+\subsection{Verbindungsverwaltung}
+\begin{description}
+    \item[FA-03: Manuelle Peer-Auswahl] \hfill \label{FA-03} \\
+    Bei der Nutzung der Anwendung soll der Benutzer über eine grafische Benutzeroberfläche eine Übersicht über alle aktuell erkannten Peers erhalten, mit denen potentiell eine Verbindung aufgebaut werden kann.
+
+    \item[FA-04: Peer-Auswahl-Ausblendung im verbundenen Zustand] \hfill \label{FA-04} \\
+    Wird eine Verbindung hergestellt mit einem anderen Peer, so soll die Peer-Auswahl-Übersicht aus Anforderung \ref{FA-03} ausgeblendet werden.
+    
+    \item[FA-05: Verbindungs-Handshake-Protokoll] \hfill \label{FA-05} \\
+    Für das Verbinden mit einem Peer soll ein Handshake-Protokoll implementiert werden mit \texttt{CONNECT\_REQ:<ip>:<port>} und \texttt{CONNECT\_OK} Nachrichten.
+
+    \item[FA-06: Bidirektionale Informationsaustausch über die Verbindung] \hfill \label{FA-06} \\
+    Bei einer Verbindungsanfrage über die \texttt{CONNECT\_REQ} Nachricht soll die IP-Addresse und der Port des Verbindungsinitiators mit versendet werden, damit auch der Empfänger die Information erhält, wer mit ihm eine Verbindung aufbauen möchte.
+
+    \item[FA-07: Verbindungsexklusivität] \hfill \label{FA-07} \\
+    Wird zwischen zwei Peers eine Verbindung erfolgereich aufgebaut und erhalten, sollen Verbindungsanfrage-Nachrichten anderer Peers währenddessen ignoriert werden.
+\end{description}
+
+\subsection{Verbindungstrennung}
+\begin{description}
+    \item[FA-08: Manueller Disconnect] \hfill \label{FA-08} \\
+    Dem Benutzer der Anwendung soll es über eine Schaltfläche ermöglicht werden, eine bestehende Verbindung zu einem anderen Peer trennen zu können, ohne die Anwendung schließen zu müssen.
+
+    \item[FA-09: Graceful-Disconnects] \hfill \label{FA-09} \\
+    Wird eine bestehende Verbindung zu einem anderen Peer manuell unterbrochen durch den Benutzer, soll eine \texttt{DISCONNECT} Nachricht erst an den Peer gesendet werden für die Verbindungsauflösung.
+
+    \item[FA-10: Zustandssynchronisation bei Disconnect] \hfill \label{FA-10} \\
+    Nachdem durch den Benutzer die Verbindung zu einem anderen Peer getrennt wird, sollen beide Instanzen ihre Zustände wie der Verbindungsstatus, die Adresse des verbundenen Peers und die Queue-Werte zurücksetzen auf ihre Initialwerte.
+\end{description}
+
+\section{Nichtfunktionale Anforderungen}\label{nichtfunktionale_anforderungen}
+Im Folgenden werden die nicht funktionalen Anforderungen definiert zur Hervorhebung qualitativer Eigenschaften der Anwendung.
+
+\subsection{Performance}
+\begin{description}
+    \item[NFA-01: Discovery-Geschwindigkeit] \hfill \label{NFA-01} \\
+    Ein vollständiger Discovery-Scan (localhost + Subnetz) soll innerhalb von maximal 5-7 Sekunden abgeschlossen sein.
+
+    \item[NFA-02: UI-Aktualisierungsrate] \hfill \label{NFA-02} \\
+    Die Benutzeroberfläche muss im Intervall von 100ms mit aktuellen Zustandsinformationen aus dem Backend aktualisiert werden.
+
+    \item[NFA-03: Handshake-Timeout] \hfill \label{NFA-03} \\
+    Discovery-Handshakes sollen einen Timeout von 2 Sekunden haben und die Verbindungs-Handshakes einen Timeout von 1 Sekunde.
+\end{description}
+
+\subsection{Benutzerfreundlichkeit}
+\begin{description}
+    \item[NFA-04: Intuitive Bedienung] \hfill \label{NFA-04} \\
+    Die Auswahl von Verbindungspartnern und das Trennen der aktuellen Verbindung soll über jeweils einen Klick für den Benutzer erledigt werden können.
+
+    \item[NFA-05: Identifikation des Verbindungspartners vor dem Verbindungsaufbau] \hfill \label{NFA-05} \\
+    Jeder der angezeigten Schaltflächen für einen möglichen Verbindungspartner soll die IP-Adresse und den Port des Peers enthalten.
+\end{description}
+
+\subsection{Zuverlässigkeit}
+\begin{description}
+    \item[NFA-06: Fehlertoleranz] \hfill \label{NFA-06} \\
+    Die Anwendung soll bei Netzwerkfehlern oder beim Abbruch der Verbindung automatisch in einen weiterhin konsistenten Zustand bleiben.
+\end{description}
+
+\subsection{Skalierbarkeit}
+\begin{description}
+    \item[NFA-08: Dynamisches Anzeige der verbindungsbereiten Peers] \hfill \label{NFA-08} \\
+    Die Anzahl der Schaltflächen zur manuellen Verbindung mit anderen Peers soll nicht durch die Fenstergröße begrenzt sein.
+    Das bedeutet, neue Schaltflächen sollen zur Übersicht hinzugefügt werden, jedoch soll das Fenster nicht linear mit der Anzahl der anzuzeigenden Buttons größer werden.
+\end{description}

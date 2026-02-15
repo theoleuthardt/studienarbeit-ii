@@ -1,15 +1,48 @@
 \chapter{Entwurf}\label{entwurf}
 
-% TODO: Entwurf schreiben (mit Referenzen zu Anforderungen)
-
 \section{Strukturelle Veränderungen im Backend}\label{backend-veraenderungen}
 
-Die wesentliche Neuerung im Backend-Entwurf ist die Einführung einer expliziten Zustandsverwaltung für Netzwerkverbindungen. Das neue Modell implementiert ein striktes State-Management und verzichtet auf den bisherigen direkten Verbindungsaufbau. Ein zentraler \texttt{PeerManager} verwaltet den Status aller externen Teilnehmer. Diese Änderung ersetzt die sofortige Session-Etablierung durch ein kontrolliertes Verfahren zur Bereitstellung von potentiellen Peers.
+Die wesentliche Neuerung im Backend-Entwurf ist die Einführung einer expliziten Zustandsverwaltung für Netzwerkverbindungen. 
+Mit dem neuen Modell wird ein striktes State-Management implementiert und es wird verzichtet auf den bisherigen direkten Verbindungsaufbau. 
+Ein zentraler \texttt{PeerManager} verwaltet den Status aller externen Teilnehmer. 
+Diese Änderung ersetzt die sofortige Session-Etablierung durch ein kontrolliertes Verfahren zur Bereitstellung von potentiellen Peers.
 
-Ein zentraler Aspekt ist die Trennung von Erkennung und Session-Management. Ein Endpunkt durchläuft mehrere Zustände, bevor ein Datenaustausch stattfindet. Zunächst identifiziert der Discovery-Scanner einen potenziellen Peer und führt diesen als Kandidaten in einer Liste. Erst die Verifikation über den anwendungsspezifischen Handshake überführt den Kandidaten in den Status eines verifizierten Peers. Kapitel \ref{algorithmen} beschreibt den genauen Nachrichtenablauf.
+Ein zentraler Aspekt ist die Trennung von Erkennung und Session-Management. 
+Ein Endpunkt durchläuft mehrere Zustände, bevor ein Datenaustausch stattfindet. 
+Zunächst identifiziert der Discovery-Scanner einen potenziellen Peer und führt diesen als Kandidaten in einer Liste. 
+Erst die Verifikation über den anwendungsspezifischen Handshake überführt den Kandidaten in den Status eines verifizierten Peers. 
+Kapitel \ref{algorithmen} beschreibt den genauen Nachrichtenablauf.
 
-Ein nebenläufiges Zugriffskonzept schützt die Datenintegrität bei parallelen Scans. Da der Port-Scanner hunderte Goroutinen gleichzeitig initiiert, sichern Synchronisationsprimitive den Zugriff auf die Peer-Liste ab. Das Backend gibt Zustandsänderungen asynchron über Kommunikationskanäle an das Frontend weiter. Dies stellt sicher, dass das System auch bei instabilen Netzwerkbedingungen oder einer hohen Anzahl konkurrierender Peers reaktionsfähig bleibt.
+Ein nebenläufiges Zugriffskonzept schützt die Datenintegrität bei parallelen Scans. 
+Da der Port-Scanner hunderte Goroutinen gleichzeitig initiiert, sichern Synchronisationsprimitive den Zugriff auf die Peer-Liste ab. 
+Das Backend gibt Zustandsänderungen asynchron über Kommunikationskanäle an das Frontend weiter. 
+Dies stellt sicher, dass das System auch bei instabilen Netzwerkbedingungen oder einer hohen Anzahl konkurrierender Peers reaktionsfähig bleibt.
 
 \section{Strukturelle Veränderungen im Frontend}\label{frontend-veraenderungen}
 
-% TODO: Beschreibung der strukturellen Veränderungen im Frontend
+Bisher wird im Frontend durch eine Status-LED der Verbindungsstatus durch Farbcodierung dargestellt.
+Durch die Farbe Grün wird der Status "verbunden" und mit Rot der Status "nicht verbunden" signalisert für den Benutzer.
+Dies wird erweitert durch die Implementierung einer reaktiven Übersicht über die verfügbaren und verbindungsbereiten Instanzen im lokalen Netzwerk inklusive der Anzeige der IP-Adresse und des Ports zur Identifikation (siehe \ref{FA-03}, \ref{NFA-04} und \ref{NFA-05}).
+
+Das bestehende Layout basiert auf einer hierarchischen Container-Struktur mit den zwei Bereichen: der obere Container in Form der Titelleiste mit Überschrift, Verbindungsstatus und dem Dark-Mode-Button; der untere Container mit der Visualisierung der Queue-States für Fast-, Dynamic- und Slow-Messages.
+Diesen beiden Bereiche wird ein dritter darunter liegender Bereich hinzugefügt, der ein einen scrollbaren Container mit Grid-layout enthält und in dem dynamisch für jeden verbindungsbereiten Peer ein Button erzeugt oder auch entfernt wird je nach Verbindungsbereitschaft (siehe \ref{FA-04}).
+
+Die Verwaltung der angezeigten Buttons für die verfügbaren Peers wird über eine map-basierte Struktur.
+Ein entdeckter Peer wird in dieser Struktur als Key-Value-Paar hinzugefügt.
+Als Key wird zur Identifikation die Kombination aus IP-Adresse und Port verwendet und als Value die Referenz auf den zugehörig erstellen Button zum Verbinden.
+Bei einem Zustandsupdate wie zum Beispiel einem neu erkannten Peer im lokalen Netzwerk wird die erhaltene Liste der erkannten Peers vom Backend mit der Map-Struktur verglichen und gegebenenfalls angepasst.
+Ein neu hinzugekommender Peer wird durch einen neuen Button im Frontend angezeigt und dem Grid-Layout hinzugefügt (siehe \ref{FA-03}).
+Ebenfalls werden Peers, die nicht mehr erreichbar sind aus der Map-Struktur entfernt und damit auch aus dem Grid-Layout.
+Diese Zustandsaktualisierungen werden in Intervallen von 100ms ausgeführt (siehe \ref{NFA-02}) über eine Erweiterung des Message-Channels mit der Lister erkannter verfügbarer Peers.
+So wird eine synchrone Darstellung des laufenden Scan-Prozesses vom Backend im Frontend sichergestellt.
+
+Bei erfolgreicher Verbindung mit einem erkannten Peer wird der Disconnect-Button in der Titelleiste angezeigt und gibt dem Benutzer die Möglichtkeit die vorhandene Verbindung wieder zu trennen, wie es in Anforderung \ref{FA-07} gefordert wird.
+Das Grid-Layout aus Buttons verfügbarer Verbindungspartner wird zeitgleich ausgeblendet (siehe \ref{FA-04}).
+Wird die Verbindung zu einem Peer getrennt wird der Disconnect-Button wieder ausgeblendet, die Verbindungsstatus-LED wird wieder rot und verfügbare Peers werden im Grid-Layout angezeigt.
+Durch diese gegenseitige Exklusivität der UI-Elemente wird intuitiv der aktuelle Anwendungszustand dem Benutzer signalisiert und es werden widersprüchliche Aktionen des Benutzers vermieden.
+
+Für die Verbindungsverwaltung wird zwischen dem Backend und Frontend ein bidrektionaler Signal-Channel implementiert neben dem schon vorhandenen Message-Channel.
+Wird ein Button in der Peer-Übersicht im Grid-Layout angeklickt durch den Benutzer, wird die Kombination aus IP-Adresse und Port an das Backend für eine Verbindungsanfrage geschickt.
+Der Disconnect-Button sendet dann analog dazu ein \texttt{"disconnect"}-String über den Signal-Channel an das Backend für einen Graceful-Disconnect (siehe \ref{FA-09}).
+
+Im folgenden Kapitel \ref{algorithmen} wird die detaillierte Implementierung der Erweiterungen an der Anwendung beschrieben.
