@@ -25,25 +25,28 @@ In folgender Auflistung werden die neuen funktionalen Anforderungen beschrieben 
     \item[FA-03: Manuelle Peer-Auswahl] \hfill \label{FA-03} \\
     Bei der Nutzung der Anwendung soll der Benutzer über eine grafische Benutzeroberfläche eine Übersicht über alle aktuell erkannten Peers erhalten, mit denen potentiell eine Verbindung aufgebaut werden kann.
 
-    \item[FA-04: Verbindungs-Handshake-Protokoll] \hfill \label{FA-04} \\
+    \item[FA-04: Peer-Auswahl-Ausblendung im verbundenen Zustand] \hfill \label{FA-04} \\
+    Wird eine Verbindung hergestellt mit einem anderen Peer, so soll die Peer-Auswahl-Übersicht aus Anforderung \ref{FA-03} ausgeblendet werden.
+    
+    \item[FA-05: Verbindungs-Handshake-Protokoll] \hfill \label{FA-05} \\
     Für das Verbinden mit einem Peer soll ein Handshake-Protokoll implementiert werden mit \texttt{CONNECT\_REQ:<ip>:<port>} und \texttt{CONNECT\_OK} Nachrichten.
 
-    \item[FA-05: Bidirektionale Informationsaustausch über die Verbindung] \hfill \label{FA-05} \\
-    Bei einer Verbindungsanfrage über die \texttt{CONNECT\_REQ} Nachricht soll die IP-Addresse und der Port des Verbindungsinitiators mit versendet werden, damit auch der Empfänger die Information erhält wer mit ihm eine Verbindung aufbauen möchte.
+    \item[FA-06: Bidirektionale Informationsaustausch über die Verbindung] \hfill \label{FA-06} \\
+    Bei einer Verbindungsanfrage über die \texttt{CONNECT\_REQ} Nachricht soll die IP-Addresse und der Port des Verbindungsinitiators mit versendet werden, damit auch der Empfänger die Information erhält, wer mit ihm eine Verbindung aufbauen möchte.
 
-    \item[FA-06: Verbindungsexklusivität] \hfill \label{FA-06} \\
+    \item[FA-07: Verbindungsexklusivität] \hfill \label{FA-07} \\
     Wird zwischen zwei Peers eine Verbindung erfolgereich aufgebaut und erhalten, sollen Verbindungsanfrage-Nachrichten anderer Peers währenddessen ignoriert werden.
 \end{description}
 
 \subsection{Verbindungstrennung}
 \begin{description}
-    \item[FA-07: Manueller Disconnect] \hfill \label{FA-07} \\
+    \item[FA-08: Manueller Disconnect] \hfill \label{FA-08} \\
     Dem Benutzer der Anwendung soll es über eine Schaltfläche ermöglicht werden, eine bestehende Verbindung zu einem anderen Peer trennen zu können, ohne die Anwendung schließen zu müssen.
 
-    \item[FA-08: Graceful-Disconnects] \hfill \label{FA-08} \\
+    \item[FA-09: Graceful-Disconnects] \hfill \label{FA-09} \\
     Wird eine bestehende Verbindung zu einem anderen Peer manuell unterbrochen durch den Benutzer, soll eine \texttt{DISCONNECT} Nachricht erst an den Peer gesendet werden für die Verbindungsauflösung.
 
-    \item[FA-09: Zustandssynchronisation bei Disconnect] \hfill \label{FA-09} \\
+    \item[FA-10: Zustandssynchronisation bei Disconnect] \hfill \label{FA-10} \\
     Nachdem durch den Benutzer die Verbindung zu einem anderen Peer getrennt wird, sollen beide Instanzen ihre Zustände wie der Verbindungsstatus, die Adresse des verbundenen Peers und die Queue-Werte zurücksetzen auf ihre Initialwerte.
 \end{description}
 
