@@ -139,7 +139,106 @@ go func() {
 }()
 \end{lstlisting}
 
+\section{Button-Grid Layout für Peer-Auswahl}
+Wie in /ref{frontend-veraenderungen} und \ref{FA-03} erwähnt, wird als zentrale Erweiterung ein Grid-Layout dem Frontend hinzugefügt zur dynamischen Anzeige verbindungsbereiter Peers.
+In der alten Version der Anwendung wird dem Benutzer keine Übersicht für verfügbare Peers angezeigt.
+Mithilfe der Verwendung von einem \texttt{GridWrapLayout}, wird dies geändert und innerhalb des \texttt{GridWrapLayout} wird pro Peer ein Button hinzugefügt und insgesamt werden alle zusammen als Raster angeordnet.
+Im folgenden Code-Block \ref{initialisierung-button-grid} wird die Initialisierung des Grids dargestellt:
+
+\Needspace{8\baselineskip}
+\begin{lstlisting}[style=golang, caption={Initialisierung des Button-Grid Containers}]
+peersButtonsContainer = container.New(
+	layout.NewGridWrapLayout(fyne.NewSize(200, 40))
+)
+peersButtonsMap = make(map[string]*widget.Button)
+\end{lstlisting}\label{initialisierung-button-grid}
+
+Mithilfe des \texttt{GridWrapLayout} werden die Buttons mit einer festgelegten Größe von 200x40 Pixel gerendert und automatisch mit Umbrüchen angeorndet, falls die die aktuelle Breite des Containers nicht ausreicht.
+So wird eine responsive Darstellung der Buttons ermöglicht, bei der die Buttons angepasst an die Größe des Anwendungsfensters dem Nutzer bereitgestellt werden.
+Wie in \ref{scroll-container} implementiert, wird der \texttt{GridWrapLayout}-Container in einen \texttt{Scroll}-Container mit einer Höhe von 150 Pixel umhüllt, damit die Fenstergröße nicht linear steigt bis in unendliche Größen wie \ref{NFA-08} beschrieben.
+
+\Needspace{6\baselineskip}
+\begin{lstlisting}[style=golang, caption={Einbettung in Scroll-Container}]
+peersScroll := container.NewVScroll(peersButtonsContainer)
+peersScroll.SetMinSize(fyne.NewSize(0, 150))
+\end{lstlisting}\label{scroll-container}
+
+Jeder der gerenderten Buttons zur Darstellung der verbindungsbereiten Peers wird mit einem Computer-Icon und der Importance-Stufe \texttt{HighImportance} erstellt.
+Somit wird dieser visuell hervorgehoben durch die blaue Farbe und den Kontrast im Standard-Theme.
+Mit der Callback-Funktion jedes Buttons wird die jeweilige Kombination aus \texttt{IP-ADRESSE:PORT} über den Signal-Channel \texttt{signalChan} an das Backend geschickt.
+Diese Neuerungen werden implementiert im unteren Codeblock \ref{dynamische-button-verwaltung}.
+
+\section{Dynamische Peer-Button-Verwaltung}
+Im Frontend wird eine dynamischen Verwaltung der Peer-Buttons im \texttt{GridWrapLayout} hinzugefügt, basierend auf der \texttt{DiscoveredPeers}-Liste vom Backend aus dem Message-Channel (siehe \ref{FA-01}).
+Wie in \ref{FA-04} beschrieben, werden nur im nicht verbundenen Zustand neue Peers, die vom Backend erkannt werden, zum Grid-Layout der Peer-Übersicht hinzugefügt und angezeigt.
+Außerdem werden verschwundene Peers wieder entfernt, damit diese nicht mehr im Grid-Layout angezeigt werden.
+Die schon im Teilkapitel \ref{frontend-veraenderungen} angesprochene Map-Struktur \texttt{peersButtonsMap} wird verwendet, um eine Verbindung zwischen dem Button in Form einer Referenz und der Kombination \texttt{IP-ADRESSE:PORT} zu erschaffen.
+Durch den Text im Button wird im Format \texttt{IP-ADRESSE:PORT} die IP-Adresse und der Port des Peers nach \ref{NFA-05} visualisiert.
+Diese Umsetzungen können dem folgenden Code-Block \ref{dynamische-button-verwaltung} entnommen werden.
+
+\Needspace{12\baselineskip}
+\begin{lstlisting}[style=golang, caption={Dynamische Button-Verwaltung (Ausschnitt aus \texttt{updateUI})}]
+if !state.Connected {
+	// Neue Peers hinzufügen
+	for _, peer := range state.DiscoveredPeers {
+		if _, exists := peersButtonsMap[peer]; !exists {
+			peerCopy := peer
+			btn := widget.NewButtonWithIcon("  "+peerCopy, theme.ComputerIcon(),
+				func() { sendConnectSignalToBackend(peerCopy) })
+			btn.Importance = widget.HighImportance
+			peersButtonsMap[peerCopy] = btn
+			peersButtonsContainer.Add(btn)
+		}
+	}
+
+	// Verschwundene Peers entfernen
+	for addr, btn := range peersButtonsMap {
+		found := false
+		for _, p := range state.DiscoveredPeers {
+			if p == addr { found = true; break }
+		}
+		if !found {
+			peersButtonsContainer.Remove(btn)
+			delete(peersButtonsMap, addr)
+		}
+	}
+}
+\end{lstlisting}\label{dynamische-button-verwaltung}
+
+Ein Button-Closure wird mit der Variable \texttt{peerCopy} verhindert, was ein in Go häufig auftretendes Problem darstellt, bei dem alle Closures auf dieselbe Variable in der Schleife referenzieren würden.
+Mit der Erstellung einer Kopie wird die Eindeutigkeit der Variable und das korrekte Anzeigen von IP-Adresse und Port im Button-Text sichergestellt.
+
+\section{Zustandsabhängige UI-Sichtbarkeit}
+Die Zustandabhängigkeit der UI wird mit \ref{FA-04} gefordert.
+Das Button-Grid-Layout wird im verbundenen Zustand ausgeblendet, damit keine zweite Verbindungsanfrage gesendet werden könnte nach Anforderung \ref{FA-07} und der Disconnect-Button wird eingeblendet.
+Im nicht verbundenen Zustand wird dieses Verhalten umgekehrt, das Button-Grid-Layout wird dargestellt und der Disconnect-Button wird temporär entfernt.
+Dieses Verhalten wird wie in \ref{zustandabhaengige-ui-aktualisierung} implementiert mithilfe der Abfrage der Variable \texttt{connected} und den Container-spezifischen Methoden \texttt{.Hide()} und \texttt{.Show()}.
+
+\Needspace{10\baselineskip}
+\begin{lstlisting}[style=golang, caption={Zustandsabhängige UI-Aktualisierung (Ausschnitt)}]
+func updateUI(state QueueState) {
+	connected = state.Connected
+
+	if connected {
+		disconnectButton.Show()
+		peersButtonsContainer.Hide()
+		// Alle Peer-Buttons entfernen
+		for addr, btn := range peersButtonsMap {
+			peersButtonsContainer.Remove(btn)
+			delete(peersButtonsMap, addr)
+		}
+	} else {
+		disconnectButton.Hide()
+		peersButtonsContainer.Show()
+	}
+
+	updateLEDColor(connected)
+}
+\end{lstlisting}\label{zustandabhaengige-ui-aktualisierung}
+
+Durch den gegenseitige Ausschluss der Darstellung von Disconnect-Button und Button-Grid-Layout werden widersprüchliche Nutzerinteraktionen verhindert und es wird visuelle Eindeutigkeit sichergestellt.
+In Codeblock \ref{zustandabhaengige-ui-aktualisierung} wird mit der vollständigen Entfernung aller Buttons, während eine Verbindung erfolgreich hergestellt wird, wird garantiert, dass keine veralteten Buttons von nicht mehr verfügbaren Peers als Artefakte noch im Frontend erhalten bleiben.
+
 \section{Sicherheits- und Netzwerkeffekte}
 Das aktive Scanning erzeugt messbaren Netzwerktraffic; in restriktiven Umgebungen kann dies zu Rate-Limiting oder zu Sicherheitswarnungen führen. Die Implementierung ist daher ausschließlich für lokale Netzwerke konzipiert.
-% Ende Kapitel Algorithmen
 

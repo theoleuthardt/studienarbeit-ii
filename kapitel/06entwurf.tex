@@ -31,7 +31,7 @@ Die Verwaltung der angezeigten Buttons für die verfügbaren Peers wird über ei
 Ein entdeckter Peer wird in dieser Struktur als Key-Value-Paar hinzugefügt.
 Als Key wird zur Identifikation die Kombination aus IP-Adresse und Port verwendet und als Value die Referenz auf den zugehörig erstellen Button zum Verbinden.
 Bei einem Zustandsupdate wie zum Beispiel einem neu erkannten Peer im lokalen Netzwerk wird die erhaltene Liste der erkannten Peers vom Backend mit der Map-Struktur verglichen und gegebenenfalls angepasst.
-Ein neu hinzugekommender Peer wird durch einen neuen Button im Frontend angezeigt und dem Grid-Layout hinzugefügt (siehe \ref{NFA-08}).
+Ein neu hinzugekommender Peer wird durch einen neuen Button im Frontend angezeigt und dem Grid-Layout hinzugefügt (siehe \ref{FA-03}).
 Ebenfalls werden Peers, die nicht mehr erreichbar sind aus der Map-Struktur entfernt und damit auch aus dem Grid-Layout.
 Diese Zustandsaktualisierungen werden in Intervallen von 100ms ausgeführt (siehe \ref{NFA-02}) über eine Erweiterung des Message-Channels mit der Lister erkannter verfügbarer Peers.
 So wird eine synchrone Darstellung des laufenden Scan-Prozesses vom Backend im Frontend sichergestellt.
